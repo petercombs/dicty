@@ -1,0 +1,9 @@
+analysis/
+Reference/
+sequence/
+tmp/
+*.log
+*.log.e
+*.log.o
+.snakemake
+*.swp

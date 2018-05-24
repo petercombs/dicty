@@ -1,0 +1,32 @@
+samples:
+    test1:
+        R1s: [sequence/A_S1_L001_R1_001.fastq.gz, ]
+        R2s: [sequence/A_S1_L001_R2_001.fastq.gz, ]
+        i5: S502
+        i7: N701
+    test2:
+        R1s: [sequence/B_S2_L001_R1_001.fastq.gz, ]
+        R2s: [sequence/B_S2_L001_R2_001.fastq.gz, ]
+    test3:
+        R1s: [sequence/C_S3_L001_R1_001.fastq.gz, ]
+        R2s: [sequence/C_S3_L001_R2_001.fastq.gz, ]
+    test4:
+        R1s: [sequence/D_S4_L001_R1_001.fastq.gz, ]
+        R2s: [sequence/D_S4_L001_R2_001.fastq.gz, ]
+    test5:
+        R1s: [sequence/E_S5_L001_R1_001.fastq.gz, ]
+        R2s: [sequence/E_S5_L001_R2_001.fastq.gz, ]
+    test6:
+        R1s: [sequence/F_S6_L001_R1_001.fastq.gz, ]
+        R2s: [sequence/F_S6_L001_R2_001.fastq.gz, ]
+    test7:
+        R1s: [sequence/G_S7_L001_R1_001.fastq.gz, ]
+        R2s: [sequence/G_S7_L001_R2_001.fastq.gz, ]
+    test8:
+        R1s: [sequence/H_S8_L001_R1_001.fastq.gz, ]
+        R2s: [sequence/H_S8_L001_R2_001.fastq.gz, ]
+    test9:
+        R1s: [sequence/I_S9_L001_R1_001.fastq.gz, ]
+        R2s: [sequence/I_S9_L001_R2_001.fastq.gz, ]
+
+

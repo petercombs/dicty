@@ -1,0 +1,38 @@
+{
+        "__default__" :
+        {
+                "time" : "02:00:00",
+                "cpus": 1,
+                "memory": "15G",
+                jobname: "{rule}.{wildcards}",
+                "slurm-partition": "hbfraser,hns,owners",
+                "torque_queue": "batch"
+        },
+        "get_sra":
+        {
+                "time": "18:00:00",
+        },
+        "call_variants":{
+                "cpus": 4,
+                "time": "6:00:00",
+
+        },
+        "dedup" :
+        {
+                "time": "12:00:00",
+                "memory": "32G",
+        },
+        "map_gdna":
+        {
+                "time": "1-00:00:00",
+                "cpus": 4,
+                "memory": "32G",
+
+        },
+        "star_map" :
+        {
+                "time" : "01:00:00",
+                "cpus": 4,
+                "memory": "30G"
+        }
+}
