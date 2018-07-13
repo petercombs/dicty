@@ -10,7 +10,6 @@ analysis_dir = 'analysis'
 gzip = 'pigz'
 module = 'module () { eval `$LMOD_CMD bash "$@"` }'
 
-
 def getreads(readnum):
     def retfun(wildcards):
         return config['samples'][wildcards.sample]["R{}s".format(readnum)]
@@ -94,9 +93,6 @@ rule ecoli_remapped:
 		| samtools view -b \
 		| samtools sort -o {output} -T {wildcards.sample}/ecoli_remap_sorting
         """
-
-        
-
 
 rule dedup:
     input: "{sample}.bam"
@@ -198,12 +194,7 @@ rule combine_variants:
 		-F HET -F HOM-REF -F HOM-VAR -F NCALLED \
 		-GF GT \
 		-o {output.tsv}
-
-
-
     """
-        
-
 
 rule map_gdna:
     input:
@@ -252,4 +243,31 @@ rule contamination_rate:
         echo -n "$i	" >> {output}; \
         samtools idxstats $i | awk 'BEGIN {{OFS="\t"}}; {{total += $3}}; /NC/ {{ec = $3}}; END {{print ec, total, ec/total}}' >> {output}; \
     done
+    """
+
+rule split_flowers:
+    input:
+        fasta="analysis/flowers2010/flowers2010.fasta",
+        dir=ancient("analysis/flowers2010/"),
+    output:
+        expand("analysis/flowers2010/{id}.fasta", id=config['flowersids'])
+    run:
+        from Bio import SeqIO
+        from os import path
+        loci={}
+        for rec in SeqIO.parse(input.fasta, 'fasta'):
+            locus = rec.description.split()[7]
+            outf = loci.get(locus, open(path.join(input.dir, locus+'.fasta'), 'w'))
+            loci[locus] = outf
+            SeqIO.write(rec, outf, 'fasta')
+        for f in loci.values():
+            f.close()
+
+rule clustalo:
+    input:
+        fasta="{sample}.fasta"
+    output:
+        "{sample}.clu"
+    shell: """source activate my_root
+    clustalo -i {input} --outfmt=clustal --outfile={output}
     """
