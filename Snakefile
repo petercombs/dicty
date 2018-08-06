@@ -9,6 +9,10 @@ analysis_dir = 'analysis'
 # External programs
 gzip = 'pigz'
 module = 'module () { eval `$LMOD_CMD bash "$@"` }'
+star = '''STAR \
+--outSAMattributes MD NH --clip5pNbases 6 --outSAMtype BAM Unsorted \
+--readFilesCommand zcat --limitBAMsortRAM 20000000000 '''
+
 
 def getreads(readnum):
     def retfun(wildcards):
@@ -271,3 +275,68 @@ rule clustalo:
     shell: """source activate my_root
     clustalo -i {input} --outfmt=clustal --outfile={output}
     """
+
+### WASP Pipeline
+rule wasp_find_snps:
+    input:
+        bam="{sample}/{prefix}_dedup.bam",
+        bai="{sample}/{prefix}_dedup.bam.bai",
+        snpdir="analysis_godot/on_mel/snpdir",
+        snpfile="analysis_godot/on_mel/snpdir/all.txt.gz"
+    output:
+        temp("{sample}/{prefix}_dedup.remap.fq1.gz"),
+        temp("{sample}/{prefix}_dedup.remap.fq2.gz"),
+        temp("{sample}/{prefix}_dedup.keep.bam"),
+        temp("{sample}/{prefix}_dedup.to.remap.bam"),
+
+    shell:
+        """python ~/FWASP/mapping/find_intersecting_snps.py \
+            --progressbar \
+            --phased --paired_end \
+            {input.bam} {input.snpdir}
+        """
+
+
+rule wasp_remap:
+    input:
+        R1="{sample}/{prefix}.remap.fq1.gz",
+        R2="{sample}/{prefix}.remap.fq2.gz",
+        genome="Reference/dmel_prepend/Genome",
+        genomedir="Reference/dmel_prepend/"
+    output:
+        temp("{sample}/{prefix}.remap.bam")
+    threads: 16
+    shell: """{module}; module load STAR;
+    rm -rf {wildcards.sample}/STARtmp
+    {star_map} \
+            --genomeDir {input.genomedir} \
+            --outFileNamePrefix {wildcards.sample}/remap \
+            --outTmpDir {wildcards.sample}/STARtmp \
+            --runThreadN {threads} \
+            --readFilesIn {input.R1} {input.R2}
+    mv {wildcards.sample}/remapAligned.out.bam {output}
+            """
+
+rule wasp_keep:
+    input:
+        toremap="{file}.to.remap.bam",
+        remapped="{file}.remap.bam",
+    output:
+        temp("{file}.remap.kept.bam"),
+    shell: """
+    export CONDA_PATH_BACKUP=""
+    export PS1=""
+    source activate peter
+    python ~/FWASP/mapping/filter_remapped_reads.py \
+            -p \
+            {input.toremap} {input.remapped} \
+            {output} """
+
+rule wasp_merge:
+    input:
+        "{file}.remap.kept.bam",
+        "{file}.keep.bam",
+    output:
+        temp("{file}.keep.merged.bam")
+    shell:
+        "{module}; module load samtools; samtools merge {output} {input}"
