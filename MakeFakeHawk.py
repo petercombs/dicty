@@ -2,6 +2,7 @@ import gzip as gz
 import pandas as pd
 from os import path
 from numpy.random import choice
+from subprocess import Popen, PIPE
 from tqdm import tqdm
 
 FQ_DIR = "/godot/1000genomes/fastqs/"
@@ -39,17 +40,25 @@ if __name__ == "__main__":
 
         downloaded_seqs = [
             (
-                gz.open(path.join(FQ_DIR, f + "_1.fastq.gz"), "rt"),
-                gz.open(path.join(FQ_DIR, f + "_2.fastq.gz"), "rt"),
+                Popen(["zcat", path.join(FQ_DIR, f + "_1.fastq.gz")], stdout=PIPE),
+                Popen(["zcat", path.join(FQ_DIR, f + "_2.fastq.gz")], stdout=PIPE),
             )
             for f in downloaded
         ]
-        out1 = gz.open("fakehawk/{}_1.fastq.gz", "wt")
-        out2 = gz.open("fakehawk/{}_2.fastq.gz", "wt")
+        out1 = Popen(
+            "gzip > fakehawk/{}_1.fastq.gz".format(genotype), shell=True, stdin=PIPE
+        )
+        out2 = Popen(
+            "gzip > fakehawk/{}_2.fastq.gz".format(genotype), shell=True, stdin=PIPE
+        )
 
+        # ints = choice(len(downloaded_seqs), SIMULATED_POOLED_READS)
+        # for i in tqdm(ints):
         for i in tqdm(range(SIMULATED_POOLED_READS)):
-            in1, in2 = choice(downloaded_seqs)
+            i = choice(len(downloaded_seqs))
+            in1, in2 = downloaded_seqs[i]
             for i in range(4):
-                out1.write(in1.readline())
-                out2.write(in2.readline())
-
+                out1.stdin.write(in1.stdout.readline())
+                out2.stdin.write(in2.stdout.readline())
+        out1.close()
+        out2.close()
