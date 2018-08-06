@@ -29,7 +29,40 @@ rule all:
         expand('analysis/{sample}/raw_variants_uncalibrated.p.g.vcf',
                 sample=config['samples']
         )
-        
+
+## Pooled Pipeline specific
+
+rule score_snps:
+    input:
+        "analysis/results/variants.bed",
+        "analysis/{sample}_Stalk/snp_counts.tsv",
+        "analysis/{sample}_Stem/snp_counts.tsv",
+    output:
+        "analysis/results/{sample}_scores.tsv"
+    shell: """
+    echo "write the score_snps rule later"
+
+    """
+
+rule snp_counts:
+    input:
+        bam="{sample}/mapped.bam",
+        variants="analysis/results/variants.bed"
+    output:
+        "{sample}/snp_counts.tsv"
+    shell:"""
+        {module}; module load samtools
+        mkdir -p {wildcards.sample}/melsim_countsnpase_tmp
+        python2 CountSNPASE.py \
+            --mode single \
+            --reads {input.bam} \
+            --snps {input.variants} \
+            --prefix {wildcards.sample}/melsim_countsnpase_tmp/
+        mv {wildcards.sample}/melsim_countsnpase_tmp/_SNP_COUNTS.txt {output}
+        rm -rf {wildcards.sample}/melsim_countsnpase_tmp
+        """
+
+
 ## Generic Rules
 rule index_bam:
     input: "{sample}.bam"
@@ -44,14 +77,14 @@ rule namesort_bam:
     samtools sort -n -o {output} {input}
     """
 rule ecoli_bam:
-    input: 
+    input:
         bam="{sample}/bowtie2_dedup.bam",
     output: "{sample}/ecoli.bam"
     shell: "{module}; module load samtools; samtools view -bo {output} {input} NC_012967.1"""
 
 rule ecoli_reads:
     input: "{sample}/ecoli.namesort.bam"
-    output: 
+    output:
         r1s="{sample}/ecoli.1.fastq.gz",
         r2s="{sample}/ecoli.2.fastq.gz",
         bad_pairs="{sample}/bad_pairs.txt",
@@ -72,7 +105,7 @@ rule ecoli_reads:
     """
 
 rule ecoli_remapped:
-    input: 
+    input:
         bt2_index="Reference/reference.1.bt2",
         r1s="{sample}/ecoli.1.fastq.gz",
         r2s="{sample}/ecoli.2.fastq.gz",
@@ -114,10 +147,10 @@ rule dedup:
         """
 
 rule makedir:
-    output: "{prefix}.log", "{prefix}/"
-    shell: "touch {wildcards.prefix}.log; mkdir -p {wildcards.prefix}"
+    output: "{prefix}/"
+    shell: "mkdir -p {wildcards.prefix}"
 
- 
+
 # SNP calling
 
 rule bowtie2_build:
@@ -137,13 +170,28 @@ rule index_fasta:
     shell: "samtools faidx {input}"
 
 rule combine_fastas:
-    input: 
+    input:
         "Reference/reference.fasta",
         #"Reference/ecoli_b_rel606.fasta",
         "Reference/ecoli_k12_mg1655.fasta",
     output:
         "Reference/combined_dd_ec.fasta"
     shell: "cat {input} > {output}"
+
+rule bcftools_variants:
+    input:
+        ref_fasta="Reference/combined_dd_ec.fasta",
+        ref_fai="Reference/combined_dd_ec.fasta.fai",
+        ref_dict="Reference/combined_dd_ec.dict",
+        bams=expand("analysis/{sample}/bowtie2_dedup.bam",
+                sample=config.samples),
+        bais=expand("analysis/{sample}/bowtie2_dedup.bam.bai",
+                sample=config.samples),
+    output: "analysis/results/variants_bcftools.vcf"
+    shell: """ {module}
+    module load bcftools
+    bcftools mpileup --output {output} --output-type v -f {input.ref_fasta} {input.bams}
+    """
 
 rule call_variants:
     input:
