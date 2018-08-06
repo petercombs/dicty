@@ -17,7 +17,6 @@ if __name__ == "__main__":
     info_fname = path.join(FQ_DIR, "1000genomes.sequence.index")
     info_file = pd.read_table(info_fname, header=28, low_memory=False,
                               na_values=['not available'])
-    print(info_file.BASE_COUNT)
     query = (
         'STUDY_NAME == "{}" and INSTRUMENT_PLATFORM == "ILLUMINA" '
         + 'and LIBRARY_LAYOUT == "PAIRED" and WITHDRAWN == 0 '
