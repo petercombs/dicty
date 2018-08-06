@@ -14,10 +14,13 @@ SIMULATED_POOLED_READS = int(
 
 if __name__ == "__main__":
     info_fname = path.join(FQ_DIR, "1000genomes.sequence.index")
-    info_file = pd.read_table(info_fname, header=28, low_memory=False)
+    info_file = pd.read_table(info_fname, header=28, low_memory=False,
+                              na_values=['not available'])
+    print(info_file.BASE_COUNT)
     query = (
         'STUDY_NAME == "{}" and INSTRUMENT_PLATFORM == "ILLUMINA" '
         + 'and LIBRARY_LAYOUT == "PAIRED" and WITHDRAWN == 0 '
+        + 'and BASE_COUNT/READ_COUNT == 152' # 76 PE
     )
 
     studies = {
@@ -27,11 +30,8 @@ if __name__ == "__main__":
 
     for genotype, studyname in studies.items():
         files = info_file.query(query.format(studyname))
-        allseqs = pd.Series(
-            {
-                f: path.exists(path.join(FQ_DIR, f + "_1.fastq.gz"))
-                for f in YRI_files.RUN_ID
-            }
+        all_seqs = pd.Series(
+            {f: path.exists(path.join(FQ_DIR, f + "_1.fastq.gz")) for f in files.RUN_ID}
         ).select(lambda x: x.startswith("SRR"))
 
         print(genotype, sum(all_seqs), sum(~all_seqs))
