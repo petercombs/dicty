@@ -51,10 +51,10 @@ if __name__ == "__main__":
             "gzip > fakehawk/{}_2.fastq.gz".format(genotype), shell=True, stdin=PIPE
         )
 
-        # ints = choice(len(downloaded_seqs), SIMULATED_POOLED_READS)
-        # for i in tqdm(ints):
-        for i in tqdm(range(SIMULATED_POOLED_READS)):
-            i = choice(len(downloaded_seqs))
+        ints = choice(len(downloaded_seqs), SIMULATED_POOLED_READS)
+        for i in tqdm(ints):
+        #for i in tqdm(range(SIMULATED_POOLED_READS)):
+            #i = choice(len(downloaded_seqs))
             in1, in2 = downloaded_seqs[i]
             for i in range(4):
                 out1.stdin.write(in1.stdout.readline())
