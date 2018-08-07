@@ -32,7 +32,7 @@ if __name__ == "__main__":
         files = info_file.query(query.format(studyname))
         all_seqs = pd.Series(
             {f: path.exists(path.join(FQ_DIR, f + "_1.fastq.gz")) for f in files.RUN_ID}
-        ).select(lambda x: x.startswith("SRR"))
+        )
 
         print(genotype, sum(all_seqs), sum(~all_seqs))
         downloaded = all_seqs.index[all_seqs]
@@ -59,5 +59,5 @@ if __name__ == "__main__":
             for i in range(4):
                 out1.stdin.write(in1.stdout.readline())
                 out2.stdin.write(in2.stdout.readline())
-        out1.close()
-        out2.close()
+        #out1.close()
+        #out2.close()
