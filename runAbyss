@@ -1,4 +1,4 @@
-abyssDir=~/abyss-1.3.2/ABYSS
+abyssDir=/opt/modules/pkgs/abyss/2.1.0/bin/ABYSS
 file=case_kmers.fasta
 suffix=25_49
 cutoff=49
