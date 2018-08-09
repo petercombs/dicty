@@ -4,6 +4,7 @@ from os import path
 from numpy.random import choice
 from subprocess import Popen, PIPE
 from tqdm import tqdm
+from sys import argv
 
 FQ_DIR = "/godot/1000genomes/fastqs/"
 SIMULATED_POOLED_READS = int(
@@ -35,6 +36,9 @@ if __name__ == "__main__":
         )
 
         print(genotype, sum(all_seqs), sum(~all_seqs))
+        if '--dryrun' in argv or '--dry-run' in argv or '-n' in argv:
+            continue
+
         downloaded = all_seqs.index[all_seqs]
 
         downloaded_seqs = [
