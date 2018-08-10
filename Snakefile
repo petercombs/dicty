@@ -184,9 +184,9 @@ rule bcftools_variants:
         ref_fai="Reference/combined_dd_ec.fasta.fai",
         ref_dict="Reference/combined_dd_ec.dict",
         bams=expand("analysis/{sample}/bowtie2_dedup.bam",
-                sample=config.samples),
+                sample=config["samples"]),
         bais=expand("analysis/{sample}/bowtie2_dedup.bam.bai",
-                sample=config.samples),
+                sample=config["samples"]),
     output: "analysis/results/variants_bcftools.vcf"
     shell: """ {module}
     module load bcftools
