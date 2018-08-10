@@ -388,3 +388,97 @@ rule wasp_merge:
         temp("{file}.keep.merged.bam")
     shell:
         "{module}; module load samtools; samtools merge {output} {input}"
+
+## Hawk Pipeline
+## See Rahman, Hallgrímsdóttir, Eisen, and  Pachter, 2018
+##     Association mapping from sequencing reads using k-mers. Elife 7: 56.  
+## https://github.com/atifrahman/HAWK/
+
+hawkdir = '$HOME/bin/hawk/bin'
+
+
+rule jellyfish_count:
+    input: 
+        R1="fakehawk/{sample}_1.fastq.gz",
+        R2="fakehawk/{sample}_2.fastq.gz",
+    output:
+        kmers=temp("fakehawk/{sample}_kmers_jellyfish"),
+        final_kmers=temp("fakehawk/{sample}_kmers.txt"),
+        final_kmers_sorted="fakehawk/{sample}_kmers_sorted.txt",
+        hist="fakehawk/{sample}.kmers.hist.csv",
+        cutoff="fakehawk/{sample}_cutoff.csv",
+    threads: 30
+    shell:"""
+    mkdir -p fakehawk/{wildcards.sample}_kmers
+
+    {hawkdir}/jellyfish count \
+        --mer-len=31 \
+        --both-strands \
+        --output fakehawk/{wildcards.sample}_kmers/tmp \
+        --threads={threads} --size=20G \
+        <( zcat {input} )
+
+     COUNT=$(ls fakehawk/{wildcards.sample}_kmers/tmp* | wc -l)
+
+	if [ $COUNT -eq 1 ]
+	then
+ 		mv fakehawk/{wildcards.sample}_kmers/tmp_0 {output.kmers}
+	else
+		{hawkdir}/jellyfish merge -o {output.kmers} fakehawk/{wildcards.sample}_kmers/tmp*
+	fi
+	rm -rf fakehawk/{wildcards.sample}_kmers
+
+    {hawkdir}/jellyfish histo -f -o {output.hist} -t {threads} {output.kmers}
+
+    awk '{{print $2"\t"$1}}' {output.hist} > {output.hist}.tmp
+    mv {output.hist}.tmp {output.hist}
+    echo 1 > {output.cutoff}
+
+
+    {hawkdir}/jellyfish dump -c -L 2 {output.kmers} > {output.final_kmers}
+    sort --parallel {threads} -n -k 1 {output.final_kmers} > {output.final_kmers_sorted}
+
+    """
+
+rule total_kmer_counts:
+    output: 
+        "fakehawk/total_kmer_counts.txt"
+    input:
+        expand("fakehawk/{sample}.kmers.hist.csv", sample=sorted(['YRI', 'TSI'])),
+    shell:"""
+    for i in {input}; do awk -f {hawkdir}/countTotalKmer.awk $i >> {output}; done
+    """
+
+rule hawk_sorted_files:
+    output: "fakehawk/sorted_files.txt"
+    input: expand("fakehawk/{sample}_kmers_sorted.txt", sample=sorted(['YRI', 'TSI']))
+    run: 
+        with open(output[0], 'w') as outf:
+            for i in input:
+                print(i, end='\n', file=outf)
+
+rule hawk_preprocess:
+    input: 
+        "fakehawk/sorted_files.txt",
+        "fakehawk/total_kmer_counts.txt",
+        "fakehawk/gwas_info.txt",
+    output:
+        expand("fakehawk/{source}{ftype}".expand(source=['case', 'control'], ftype['_sorted_files.txt', '_total_kmers.txt', '.ind'])
+
+    shell: """
+    cd fakehawk
+    {hawkdir}/preProcess
+    """
+
+rule hawk_eigenstrats:
+    input: 
+        kmers = expand("fakehawk/{source}_total_kmers.txt".expand(source=['case', 'control'])
+        inds = expand("fakehawk/{source}.ind".expand(source=['case', 'control'])
+    output:
+        total = "fakehawk/gwas_eigenstratX.total",
+        ind = "fakehawk/gwas_eigenstratX.ind"
+    shell: """
+    cat {input.kmers} > {output.total}
+    cat {input.inds} > {output.ind}
+    """
+        
