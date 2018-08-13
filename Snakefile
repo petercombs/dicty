@@ -480,4 +480,15 @@ rule hawk_eigenstrats:
     cat {input.kmers} > {output.total}
     cat {input.inds} > {output.ind}
     """
-        
+
+rule hawk_smartpca:
+    input:
+        "fakehawk/gwas_eigenstratX.ind",
+        "fakehawk/gwas_eigenstratX.total",
+    output:
+        "fakehawk/log_eigen.txt",
+    shell: """
+    cd fakehawk
+    {hawkdir}/smartpca -p {hawkdir}/parfile.txt > log_eigen.txt
+    {hawkdir}/evec2pca.perl 10 gwas_eigenstrat.evec gwas_eigenstratX.ind gwas_eigenstrat.pca
+    """
