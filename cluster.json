@@ -5,8 +5,14 @@
                 "cpus": 1,
                 "memory": "15G",
                 jobname: "{rule}.{wildcards}",
-                "slurm-partition": "hbfraser,hns,owners",
+                "partition": "hbfraser,hns,owners",
                 "torque_queue": "batch"
+        },
+        "jellyfish_count":
+        {
+            "cpus": 30,
+            "time": "4-0:0:0",
+            "memory": "200G"
         },
         "get_sra":
         {
