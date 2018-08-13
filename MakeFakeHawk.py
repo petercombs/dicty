@@ -14,6 +14,8 @@ SIMULATED_POOLED_READS = int(
     / 8  # 8 samples per lane
 )
 
+NSPLIT = 20
+
 if __name__ == "__main__":
     info_fname = path.join(FQ_DIR, "1000genomes.sequence.index")
     info_file = pd.read_table(info_fname, header=28, low_memory=False,
@@ -48,20 +50,25 @@ if __name__ == "__main__":
             )
             for f in downloaded
         ]
-        out1 = Popen(
-            "gzip > fakehawk/{}_1.fastq.gz".format(genotype), shell=True, stdin=PIPE
-        )
-        out2 = Popen(
-            "gzip > fakehawk/{}_2.fastq.gz".format(genotype), shell=True, stdin=PIPE
-        )
+        out1 = []
+        out2 = []
+        for i in range(NSPLIT):
+            out1.append( Popen(
+                "gzip > fakehawk/{}_{}_1.fastq.gz".format(genotype, i), shell=True, stdin=PIPE
+            ))
+            out2.append(Popen(
+                "gzip > fakehawk/{}_{}_2.fastq.gz".format(genotype, i), shell=True, stdin=PIPE
+            ))
 
         ints = choice(len(downloaded_seqs), SIMULATED_POOLED_READS)
         for i in tqdm(ints):
         #for i in tqdm(range(SIMULATED_POOLED_READS)):
             #i = choice(len(downloaded_seqs))
             in1, in2 = downloaded_seqs[i]
-            for i in range(4):
-                out1.stdin.write(in1.stdout.readline())
-                out2.stdin.write(in2.stdout.readline())
-        #out1.close()
-        #out2.close()
+            for j in range(5):
+                out1[i%NSPLIT].stdin.write(in1.stdout.readline())
+                out2[i%NSPLIT].stdin.write(in2.stdout.readline())
+        for joblist in [out1, out2]:
+            for job in joblist:
+                job.stdin.close()
+

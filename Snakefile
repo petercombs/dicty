@@ -398,27 +398,29 @@ hawkdir = '$HOME/bin/hawk/bin'
 
 
 rule jellyfish_count:
-    input: 
-        R1="fakehawk/{sample}_1.fastq.gz",
-        R2="fakehawk/{sample}_2.fastq.gz",
+    input:
+        R1=expand("fakehawk/{{sample}}_{i}_1.fastq.gz", i=range(20)),
+        R2=expand("fakehawk/{{sample}}_{i}_2.fastq.gz", i=range(20)),
     output:
         kmers=temp("fakehawk/{sample}_kmers_jellyfish"),
         final_kmers=temp("fakehawk/{sample}_kmers.txt"),
         final_kmers_sorted="fakehawk/{sample}_kmers_sorted.txt",
         hist="fakehawk/{sample}.kmers.hist.csv",
         cutoff="fakehawk/{sample}_cutoff.csv",
+    params:
+        allzcats = lambda wildcards, input: ' '.join('<( zcat {} )'.format(i) for i in input)
     threads: 30
     shell:"""
-    mkdir -p fakehawk/{wildcards.sample}_kmers
-
-    {hawkdir}/jellyfish count \
+    mkdir -p fakehawk/{wildcards.sample}_kmers 
+    {module}
+    module load jellyfish/2.2.10
+    jellyfish count \
         --mer-len=31 \
-        --both-strands \
-        --output fakehawk/{wildcards.sample}_kmers/tmp \
-        --threads={threads} --size=20G \
-        <( zcat {input} )
-
-     COUNT=$(ls fakehawk/{wildcards.sample}_kmers/tmp* | wc -l)
+        --canonical \
+        --output {output.kmers} \
+        --timing fakehawk/{wildcards.sample}.timing.log \
+        --Files={threads} --threads={threads} --size=20G \
+        {params.allzcats}
 
 	if [ $COUNT -eq 1 ]
 	then
