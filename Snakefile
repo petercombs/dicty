@@ -391,7 +391,7 @@ rule wasp_merge:
 
 ## Hawk Pipeline
 ## See Rahman, Hallgrímsdóttir, Eisen, and  Pachter, 2018
-##     Association mapping from sequencing reads using k-mers. Elife 7: 56.  
+##     Association mapping from sequencing reads using k-mers. Elife 7: 56.
 ## https://github.com/atifrahman/HAWK/
 
 hawkdir = '$HOME/bin/hawk/bin'
@@ -443,7 +443,7 @@ rule jellyfish_count:
     """
 
 rule total_kmer_counts:
-    output: 
+    output:
         "fakehawk/total_kmer_counts.txt"
     input:
         expand("fakehawk/{sample}.kmers.hist.csv", sample=sorted(['YRI', 'TSI'])),
@@ -454,28 +454,29 @@ rule total_kmer_counts:
 rule hawk_sorted_files:
     output: "fakehawk/sorted_files.txt"
     input: expand("fakehawk/{sample}_kmers_sorted.txt", sample=sorted(['YRI', 'TSI']))
-    run: 
+    run:
         with open(output[0], 'w') as outf:
             for i in input:
                 print(i, end='\n', file=outf)
 
 rule hawk_preprocess:
-    input: 
+    input:
         "fakehawk/sorted_files.txt",
         "fakehawk/total_kmer_counts.txt",
         "fakehawk/gwas_info.txt",
     output:
-        expand("fakehawk/{source}{ftype}".expand(source=['case', 'control'], ftype['_sorted_files.txt', '_total_kmers.txt', '.ind'])
-
+        *expand("fakehawk/{source}{ftype}",
+                source=['case', 'control'],
+                ftype=['_sorted_files.txt', '_total_kmers.txt', '.ind'])
     shell: """
     cd fakehawk
     {hawkdir}/preProcess
     """
 
 rule hawk_eigenstrats:
-    input: 
-        kmers = expand("fakehawk/{source}_total_kmers.txt".expand(source=['case', 'control'])
-        inds = expand("fakehawk/{source}.ind".expand(source=['case', 'control'])
+    input:
+        kmers = expand("fakehawk/{source}_total_kmers.txt", source=['case', 'control']),
+        inds = expand("fakehawk/{source}.ind", source=['case', 'control']),
     output:
         total = "fakehawk/gwas_eigenstratX.total",
         ind = "fakehawk/gwas_eigenstratX.ind"
