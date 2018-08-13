@@ -422,23 +422,19 @@ rule jellyfish_count:
         --Files={threads} --threads={threads} --size=20G \
         {params.allzcats}
 
-	if [ $COUNT -eq 1 ]
-	then
- 		mv fakehawk/{wildcards.sample}_kmers/tmp_0 {output.kmers}
-	else
-		{hawkdir}/jellyfish merge -o {output.kmers} fakehawk/{wildcards.sample}_kmers/tmp*
-	fi
-	rm -rf fakehawk/{wildcards.sample}_kmers
+    jellyfish histo -f -o {output.hist} -t {threads} {output.kmers}
 
-    {hawkdir}/jellyfish histo -f -o {output.hist} -t {threads} {output.kmers}
-
-    awk '{{print $2"\t"$1}}' {output.hist} > {output.hist}.tmp
+    awk '{{print $2"\\t"$1}}' {output.hist} > {output.hist}.tmp
     mv {output.hist}.tmp {output.hist}
     echo 1 > {output.cutoff}
 
 
-    {hawkdir}/jellyfish dump -c -L 2 {output.kmers} > {output.final_kmers}
-    sort --parallel {threads} -n -k 1 {output.final_kmers} > {output.final_kmers_sorted}
+    jellyfish dump -c -L 2 {output.kmers} > {output.final_kmers}
+    mkdir -p fakehawk/sort{wildcards.sample}
+    sort --temporary-directory fakehawk/sort{wildcards.sample} \
+         --parallel {threads} -n -k 1 {output.final_kmers} \
+         > {output.final_kmers_sorted}
+    rm -rf fakehawk/sort{wildcards.sample}
 
     """
 
