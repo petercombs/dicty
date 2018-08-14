@@ -399,26 +399,28 @@ hawkdir = '$HOME/bin/hawk/bin'
 
 rule jellyfish_count:
     input:
-        R1=expand("fakehawk/{{sample}}_{i}_1.fastq.gz", i=range(20)),
-        R2=expand("fakehawk/{{sample}}_{i}_2.fastq.gz", i=range(20)),
+        #R1=expand("{{dir}}/{{sample}}_{i}_1.fastq.gz", i=range(20)),
+        #R2=expand("{{dir}}/{{sample}}_{i}_2.fastq.gz", i=range(20)),
+        R1="{dir}/{sample}_1.fastq.gz",
+        R2="{dir}/{sample}_2.fastq.gz",
     output:
-        kmers=temp("fakehawk/{sample}_kmers_jellyfish"),
-        final_kmers=temp("fakehawk/{sample}_kmers.txt"),
-        final_kmers_sorted="fakehawk/{sample}_kmers_sorted.txt",
-        hist="fakehawk/{sample}.kmers.hist.csv",
-        cutoff="fakehawk/{sample}_cutoff.csv",
+        kmers=temp("{dir}/{sample}_kmers_jellyfish"),
+        final_kmers=temp("{dir}/{sample}_kmers.txt"),
+        final_kmers_sorted="{dir}/{sample}_kmers_sorted.txt",
+        hist="{dir}/{sample}.kmers.hist.csv",
+        cutoff="{dir}/{sample}_cutoff.csv",
     params:
         allzcats = lambda wildcards, input: ' '.join('<( zcat {} )'.format(i) for i in input)
     threads: 30
     shell:"""
-    mkdir -p fakehawk/{wildcards.sample}_kmers 
+    mkdir -p {wildcards.dir}/{wildcards.sample}_kmers
     {module}
     module load jellyfish/2.2.10
     jellyfish count \
         --mer-len=31 \
         --canonical \
         --output {output.kmers} \
-        --timing fakehawk/{wildcards.sample}.timing.log \
+        --timing {wildcards.dir}/{wildcards.sample}.timing.log \
         --Files={threads} --threads={threads} --size=20G \
         {params.allzcats}
 
@@ -430,52 +432,88 @@ rule jellyfish_count:
 
 
     jellyfish dump -c -L 2 {output.kmers} > {output.final_kmers}
-    mkdir -p fakehawk/sort{wildcards.sample}
-    sort --temporary-directory fakehawk/sort{wildcards.sample} \
+    mkdir -p {wildcards.dir}/sort{wildcards.sample}
+    sort --temporary-directory {wildcards.dir}/sort{wildcards.sample} \
          --parallel {threads} -n -k 1 {output.final_kmers} \
          > {output.final_kmers_sorted}
-    rm -rf fakehawk/sort{wildcards.sample}
+    rm -rf {wildcards.dir}/sort{wildcards.sample}
 
+    echo "The end"
     """
+
+rule rename_kmers:
+    input: "{sample}_sorted.txt"
+    output: "{sample}_renamed.txt"
+    shell: "./KmerBasesToNumber < {input} > {output}"
 
 rule total_kmer_counts:
     output:
-        "fakehawk/total_kmer_counts.txt"
+        "{dir}/total_kmer_counts.txt"
     input:
-        expand("fakehawk/{sample}.kmers.hist.csv", sample=sorted(['YRI', 'TSI'])),
+        #expand("{{dir}}/{sample}.kmers.hist.csv", sample=sorted(['YRI', 'TSI'])),
+        expand("{{dir}}/{sample}_{num}.kmers.hist.csv", sample=sorted(['YRI', 'TSI']), num=range(20)),
     shell:"""
     for i in {input}; do awk -f {hawkdir}/countTotalKmer.awk $i >> {output}; done
     """
 
 rule hawk_sorted_files:
-    output: "fakehawk/sorted_files.txt"
-    input: expand("fakehawk/{sample}_kmers_sorted.txt", sample=sorted(['YRI', 'TSI']))
+    output: "{dir}/sorted_files.txt"
+    input: 
+    #expand("{{dir}}/{sample}_kmers_renamed.txt", sample=sorted(['YRI', 'TSI']))
+        expand("{{dir}}/{sample}_{idx}_kmers_renamed.txt", sample=sorted(['YRI', 'TSI']), idx=range(20))
     run:
+        from os import path
         with open(output[0], 'w') as outf:
             for i in input:
-                print(i, end='\n', file=outf)
+                print(path.basename(i), end='\n', file=outf)
 
 rule hawk_preprocess:
     input:
-        "fakehawk/sorted_files.txt",
-        "fakehawk/total_kmer_counts.txt",
-        "fakehawk/gwas_info.txt",
+        "{dir}/sorted_files.txt",
+        "{dir}/total_kmer_counts.txt",
+        "{dir}/gwas_info.txt",
     output:
-        *expand("fakehawk/{source}{ftype}",
+        *expand("{{dir}}/{source}{ftype}",
                 source=['case', 'control'],
                 ftype=['_sorted_files.txt', '_total_kmers.txt', '.ind'])
     shell: """
-    cd fakehawk
+    cd {wildcards.dir}
     {hawkdir}/preProcess
     """
 
+rule hawk_main:
+    input:
+        "{dir}/case_total_kmers.txt",
+        "{dir}/control_total_kmers.txt",
+        "{dir}/case_sorted_files.txt",
+        "{dir}/control_sorted_files.txt",
+
+    output:
+        expand("{{dir}}/{file}",
+                file=[
+                "case_out_wo_bonf.kmerDiff",
+                "control_out_wo_bonf.kmerDiff",
+                "case_out_w_bonf.kmerDiff",
+                "control_out_w_bonf.kmerDiff",
+                "total_kmers.txt",
+                "gwas_eigenstratX.geno",
+                "gwas_eigenstratX.snp",
+                ])
+    shell:"""
+        cd {wildcards.dir}
+        {hawkdir}/hawk 1 1
+        """
+
+
 rule hawk_eigenstrats:
     input:
-        kmers = expand("fakehawk/{source}_total_kmers.txt", source=['case', 'control']),
-        inds = expand("fakehawk/{source}.ind", source=['case', 'control']),
+        "{dir}/gwas_eigenstratX.snp",
+        kmers = expand("{{dir}}/{source}_total_kmers.txt", source=['case', 'control']),
+        inds = expand("{{dir}}/{source}.ind", source=['case', 'control']),
+
     output:
-        total = "fakehawk/gwas_eigenstratX.total",
-        ind = "fakehawk/gwas_eigenstratX.ind"
+        total = "{dir}/gwas_eigenstratX.total",
+        ind = "{dir}/gwas_eigenstratX.ind"
     shell: """
     cat {input.kmers} > {output.total}
     cat {input.inds} > {output.ind}
@@ -483,12 +521,50 @@ rule hawk_eigenstrats:
 
 rule hawk_smartpca:
     input:
-        "fakehawk/gwas_eigenstratX.ind",
-        "fakehawk/gwas_eigenstratX.total",
+        "{dir}/gwas_eigenstratX.ind",
+        "{dir}/gwas_eigenstratX.total",
     output:
-        "fakehawk/log_eigen.txt",
+        "{dir}/log_eigen.txt",
+        "{dir}/pcs.evec",
+        "{dir}/case_out_w_bonf_sorted.kmerDiff",
+        "{dir}/control_out_w_bonf_sorted.kmerDiff",
     shell: """
-    cd fakehawk
+    cd {wildcards.dir}
+    noInd=$(cat sorted_files.txt | wc -l);
     {hawkdir}/smartpca -p {hawkdir}/parfile.txt > log_eigen.txt
-    {hawkdir}/evec2pca.perl 10 gwas_eigenstrat.evec gwas_eigenstratX.ind gwas_eigenstrat.pca
+    {hawkdir}/evec2pca.perl 2 gwas_eigenstrat.evec gwas_eigenstratX.ind gwas_eigenstrat.pca
+
+    tail -${{noInd}} gwas_eigenstrat.pca > pcs.evec
+
+    sort -g  -k 4 -t $'\t' case_out_w_bonf.kmerDiff > case_out_w_bonf_sorted.kmerDiff
+    head -200000 case_out_w_bonf_sorted.kmerDiff > case_out_w_bonf_top.kmerDiff
+
+    sort -g  -k 4 -t $'\t' control_out_w_bonf.kmerDiff > control_out_w_bonf_sorted.kmerDiff
+    head -200000 control_out_w_bonf_sorted.kmerDiff > control_out_w_bonf_top.kmerDiff
+    """
+
+rule hawk_sig_fasta:
+    input: "{dir}/case_out_wo_bonf.kmerDiff", "{dir}/control_out_wo_bonf.kmerDiff"
+    output: "{dir}/case_out_sig.fasta", "{dir}/control_out_sig.fasta"
+    shell: """cd {wildcards.dir}
+    {hawkdir}/bonf_fasta"""
+
+rule abyss:
+    input: "{prefix}_out_sig.fasta"
+    output:
+        abyss="{prefix}_abyss.{min,\d+}.fasta",
+    shell: """{module}
+    module load abyss
+    ABYSS -k {wildcards.min} -c 0 -e 0 {input} -o {output.abyss}
+        """
+
+rule abyss_filtered:
+    input:
+        abyss="{prefix}_abyss.{min}.fasta"
+    output:
+        filtered="{prefix}_abyss.{min}_{max}.fasta"
+    shell: """
+    awk '!/^>/ {{next}} {{getline seq}} length(seq) >= {wildcards.max} {{ print $0 "\\n" seq}}' \
+        {input}  \
+        > {output}
     """
