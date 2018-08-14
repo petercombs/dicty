@@ -7,4 +7,5 @@ tmp/
 *.log.o
 .snakemake
 *.swp
-fakehawk
+fakehawk*
+KmerBasesToNumber
