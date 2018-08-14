@@ -12,7 +12,17 @@
         {
             "cpus": 30,
             "time": "4-0:0:0",
-            "memory": "200G"
+            "memory": "180G"
+        },
+        "rename_kmer":
+        {
+            "memory": "100M"
+        },
+        "hawk_main":
+        {
+            "cpus": 100,
+            "time": "4-0:0:0"
+
         },
         "get_sra":
         {
