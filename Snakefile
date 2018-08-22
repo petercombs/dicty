@@ -501,7 +501,9 @@ rule hawk_main:
                 ])
     shell:"""
         cd {wildcards.dir}
-        {hawkdir}/hawk 1 1
+        caseCount=$(cat case_sorted_files.txt | wc -l);
+        controlCount=$(cat control_sorted_files.txt | wc -l);
+        {hawkdir}/hawk $caseCount $controlCount
         """
 
 
@@ -532,7 +534,7 @@ rule hawk_smartpca:
     cd {wildcards.dir}
     noInd=$(cat sorted_files.txt | wc -l);
     {hawkdir}/smartpca -p {hawkdir}/parfile.txt > log_eigen.txt
-    {hawkdir}/evec2pca.perl 2 gwas_eigenstrat.evec gwas_eigenstratX.ind gwas_eigenstrat.pca
+    {hawkdir}/evec2pca.perl 10 gwas_eigenstrat.evec gwas_eigenstratX.ind gwas_eigenstrat.pca
 
     tail -${{noInd}} gwas_eigenstrat.pca > pcs.evec
 
