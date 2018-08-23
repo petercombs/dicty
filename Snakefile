@@ -230,10 +230,9 @@ rule call_variants:
     threads: 4
     shell: """
     {module}; module load java
-	gatk -T HaplotypeCaller \
+	gatk HaplotypeCaller \
 		-R {input.ref_fasta} \
 		-I {input.bam} \
-		-nct 16 \
 		--genotyping_mode DISCOVERY \
 		--output_mode EMIT_ALL_SITES \
 		--emitRefConfidence GVCF \
@@ -257,12 +256,12 @@ rule combine_variants:
         files=lambda wildcards, input: ' '.join('-V ' + i for i in input.infastas)
     shell: """
     {module}; module load java
-    gatk -T GenotypeGVCFs \
+    gatk GenotypeGVCFs \
         -R {input.ref_fasta} \
         {params.files} \
         -o {output.vcf}
 
-	gatk -T VariantsToTable \
+	gatk VariantsToTable \
 		-R {input.ref_fasta} \
 		-V {output.vcf} \
 		-F CHROM -F POS -F REF -F ALT -F QUAL \
