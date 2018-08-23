@@ -16,12 +16,19 @@ star = '''STAR \
 
 def getreads(readnum):
     def retfun(wildcards):
-        return config['samples'][wildcards.sample]["R{}s".format(readnum)]
+        if wildcards.sample in config['samples']:
+            return config['samples'][wildcards.sample]["R{}s".format(readnum)]
+        elif '-'.join([wildcards.sample, wildcards.part]) in config['samples']:
+            return config['samples']['-'.join([wildcards.sample, wildcards.part])]["R{}s".format(readnum)]
+
     return retfun
 
 def getreadscomma(readnum):
     def retfun(wildcards):
-        return ','.join(config['samples'][wildcards.sample]["R{}s".format(readnum)])
+        if wildcards.sample in config['samples']:
+            return ','.join(config['samples'][wildcards.sample]["R{}s".format(readnum)])
+        elif '-'.join([wildcards.sample, wildcards.part]) in config['samples']:
+            return ','.join(config['samples']['-'.join([wildcards.sample, wildcards.part])]["R{}s".format(readnum)])
     return retfun
 
 rule all:
@@ -34,9 +41,9 @@ rule all:
 
 rule score_snps:
     input:
-        "analysis/results/variants.bed",
-        "analysis/{sample}_Stalk/snp_counts.tsv",
-        "analysis/{sample}_Stem/snp_counts.tsv",
+        "analysis/combined/all.snps.bed",
+        "analysis/{sample}/stalk/snp_counts.tsv",
+        "analysis/{sample}/spore/snp_counts.tsv",
     output:
         "analysis/results/{sample}_scores.tsv"
     shell: """
@@ -47,13 +54,14 @@ rule score_snps:
 rule snp_counts:
     input:
         bam="{sample}/mapped.bam",
-        variants="analysis/results/variants.bed"
+        variants="analysis/combined/all.snps.bed",
     output:
         "{sample}/snp_counts.tsv"
     shell:"""
         {module}; module load samtools
         mkdir -p {wildcards.sample}/melsim_countsnpase_tmp
-        python2 CountSNPASE.py \
+        export PYTHONPATH=$HOME/ASEr/
+        python ~/ASEr/bin/CountSNPASE.py \
             --mode single \
             --reads {input.bam} \
             --snps {input.variants} \
@@ -178,19 +186,34 @@ rule combine_fastas:
         "Reference/combined_dd_ec.fasta"
     shell: "cat {input} > {output}"
 
-rule bcftools_variants:
+rule bcf_call_variants:
     input:
         ref_fasta="Reference/combined_dd_ec.fasta",
         ref_fai="Reference/combined_dd_ec.fasta.fai",
         ref_dict="Reference/combined_dd_ec.dict",
-        bams=expand("analysis/{sample}/bowtie2_dedup.bam",
-                sample=config["samples"]),
-        bais=expand("analysis/{sample}/bowtie2_dedup.bam.bai",
-                sample=config["samples"]),
-    output: "analysis/results/variants_bcftools.vcf"
-    shell: """ {module}
-    module load bcftools
-    bcftools mpileup --output {output} --output-type v -f {input.ref_fasta} {input.bams}
+        bam=expand("analysis/{sample}/{part}/mapped_dedup.bam",
+                    sample=config['activesamples'], part=['stalk', 'spore']),
+        bai=expand("analysis/{sample}/{part}/mapped_dedup.bam.bai",
+                    sample=config['activesamples'], part=['stalk', 'spore']),
+    output:
+        "analysis/combined/all.vcf.gz",
+    shell: """ {module}; module load bcftools
+    bcftools mpileup \
+        --fasta-ref {input.ref_fasta} \
+        --gvcf 10 \
+        --output {output} \
+        --output-type z \
+        {input.bam}
+        """
+
+rule variants_to_beds:
+    input:
+        vcf="{prefix}.vcf.gz"
+    output:
+        snps="{prefix}.snps.bed",
+        indels="{prefix}.indels.bed",
+    shell: """
+    python VCF_to_Bed.py {input.vcf} {output.snps} {output.indels}
     """
 
 rule call_variants:
@@ -248,16 +271,28 @@ rule combine_variants:
 		-o {output.tsv}
     """
 
+rule process_variants:
+    input:
+        var_tab="analysis/combined/combined.tsv",
+        outdir="analysis/results/",
+    output:
+        bed="analysis/results/variants.bed"
+    shell: """
+	python TableToBed.py \
+		{input.var_tab} \
+		{output.bed}
+    """
+
 rule map_gdna:
     input:
         unpack(getreads(1)),
         unpack(getreads(2)),
-        ancient(path.join(analysis_dir, "{sample}")+'/'),
+        ancient(path.join(analysis_dir, "{sample}", "{part}")+'/'),
         bt2_index="Reference/combined_dd_ec.1.bt2"
     output:
-        path.join(analysis_dir, "{sample}", "bowtie2.bam")
+        path.join(analysis_dir, "{sample}", "{part}", "mapped.bam")
     log:
-        path.join(analysis_dir, "{sample}", "bowtie2.log")
+        path.join(analysis_dir, "{sample}", "{part}", "bowtie2.log")
     params:
         index=lambda wildcards, input: input.bt2_index[:-6],
         r1s=getreadscomma(1),
