@@ -49,8 +49,8 @@ rule score_snps:
     output:
         "analysis/results/{sample}_scores.tsv"
     shell: """
-    echo "write the score_snps rule later"
-
+    source activate fraserconda
+    python ScoreSnps.py {input} {output}
     """
 
 rule snp_counts:
