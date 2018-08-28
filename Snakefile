@@ -317,10 +317,10 @@ rule map_gdna:
 
 rule contamination_rate:
     input:
-        bams=expand('analysis/{sample}/bowtie2_dedup.bam',
-                sample=config['samples']),
-        bais=expand('analysis/{sample}/bowtie2_dedup.bam.bai',
-                sample=config['samples'])
+        bams=expand('analysis/{sample}/{part}/mapped_dedup.bam',
+                sample=config['activesamples'], part=['Stalk', 'Spore']),
+        bais=expand('analysis/{sample}/{part}/mapped_dedup.bam.bai',
+                sample=config['activesamples'], part=['Stalk', 'Spore'])
     output:
         "analysis/combined/contamination.tsv"
     shell: """
