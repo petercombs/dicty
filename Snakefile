@@ -55,8 +55,8 @@ rule score_snps:
 
 rule snp_counts:
     input:
-        bam="{sample}/mapped.bam",
-        bai="{sample}/mapped.bam.bai",
+        bam="{sample}/mapped_dedup.bam",
+        bai="{sample}/mapped_dedup.bam.bai",
         variants="analysis/combined/all.snps.bed",
     output:
         "{sample}/snp_counts.tsv"
