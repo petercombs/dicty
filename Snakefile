@@ -186,6 +186,11 @@ rule index_fasta:
     output: "{file}.fasta.fai"
     shell: "samtools faidx {input}"
 
+rule make_regions:
+    input: "{file}.fasta.fai",
+    output: "{file}.regions",
+    shell: "cut -f 1 {input} > {output}"
+
 rule combine_fastas:
     input:
         "Reference/reference.fasta",
@@ -200,6 +205,7 @@ rule bcf_call_variants:
         ref_fasta="Reference/combined_dd_ec.fasta",
         ref_fai="Reference/combined_dd_ec.fasta.fai",
         ref_dict="Reference/combined_dd_ec.dict",
+        regions="Reference/reference.regions",
         bam=expand("analysis/{sample}/{part}/mapped_dedup.bam",
                     sample=config['activesamples'], part=['Stalk', 'Spore']),
         bai=expand("analysis/{sample}/{part}/mapped_dedup.bam.bai",
@@ -209,6 +215,8 @@ rule bcf_call_variants:
     shell: """ {module}; module load bcftools
     bcftools mpileup \
         --fasta-ref {input.ref_fasta} \
+        --targets-file {input.regions} \
+        --annotate AD,DP \
         --gvcf 10 \
         --output {output} \
         --output-type z \
