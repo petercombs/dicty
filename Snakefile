@@ -70,6 +70,15 @@ rule snp_counts:
 {output}
         """
 
+rule fisher_pvalues:
+    input:
+        expand("analysis/results/{sample}_scores.tsv", sample=config['activesamples'])
+    output:
+        'analysis/results/combined.Stalk.tsv',
+        'analysis/results/combined.Spore.tsv',
+    shell: """ source activate fraserconda
+    python CombinePvals.py --output analysis/results/combined {input}
+    """
 
 ## Generic Rules
 rule index_bam:
