@@ -54,20 +54,18 @@ rule score_snps:
 rule snp_counts:
     input:
         bam="{sample}/mapped.bam",
+        bai="{sample}/mapped.bam.bai",
         variants="analysis/combined/all.snps.bed",
     output:
         "{sample}/snp_counts.tsv"
     shell:"""
-        {module}; module load samtools
-        mkdir -p {wildcards.sample}/melsim_countsnpase_tmp
-        export PYTHONPATH=$HOME/ASEr/
-        python ~/ASEr/bin/CountSNPASE.py \
-            --mode single \
-            --reads {input.bam} \
-            --snps {input.variants} \
-            --prefix {wildcards.sample}/melsim_countsnpase_tmp/
-        mv {wildcards.sample}/melsim_countsnpase_tmp/_SNP_COUNTS.txt {output}
-        rm -rf {wildcards.sample}/melsim_countsnpase_tmp
+    export CONDA_PATH_BACKUP=""
+    export PS1=""
+    source activate fraserconda
+    python CountSNPASE.py \
+{input.variants} \
+{input.bam} \
+{output}
         """
 
 
