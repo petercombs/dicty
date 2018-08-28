@@ -19,31 +19,33 @@ def getreads(readnum):
         if wildcards.sample in config['samples']:
             return config['samples'][wildcards.sample]["R{}s".format(readnum)]
         elif '-'.join([wildcards.sample, wildcards.part]) in config['samples']:
+            singlefile = path.join('sequence', '{}-{}-R{}.fastq.gz'.format(
+                        wildcards.sample, wildcards.part, readnum
+            ))
+            if path.exists(singlefile):
+                return [singlefile]
             return config['samples']['-'.join([wildcards.sample, wildcards.part])]["R{}s".format(readnum)]
 
     return retfun
 
 def getreadscomma(readnum):
     def retfun(wildcards):
-        if wildcards.sample in config['samples']:
-            return ','.join(config['samples'][wildcards.sample]["R{}s".format(readnum)])
-        elif '-'.join([wildcards.sample, wildcards.part]) in config['samples']:
-            return ','.join(config['samples']['-'.join([wildcards.sample, wildcards.part])]["R{}s".format(readnum)])
+        reads = getreads(readnum)(wildcards)
+        return ','.join(reads)
     return retfun
 
 rule all:
     input:
-        expand('analysis/{sample}/raw_variants_uncalibrated.p.g.vcf',
-                sample=config['samples']
+        expand('analysis/results/{sample}_scores.tsv',
+                sample=config['activesamples']
         )
 
 ## Pooled Pipeline specific
 
 rule score_snps:
     input:
-        "analysis/combined/all.snps.bed",
-        "analysis/{sample}/stalk/snp_counts.tsv",
-        "analysis/{sample}/spore/snp_counts.tsv",
+        "analysis/{sample}/Stalk/snp_counts.tsv",
+        "analysis/{sample}/Spore/snp_counts.tsv",
     output:
         "analysis/results/{sample}_scores.tsv"
     shell: """
@@ -190,9 +192,9 @@ rule bcf_call_variants:
         ref_fai="Reference/combined_dd_ec.fasta.fai",
         ref_dict="Reference/combined_dd_ec.dict",
         bam=expand("analysis/{sample}/{part}/mapped_dedup.bam",
-                    sample=config['activesamples'], part=['stalk', 'spore']),
+                    sample=config['activesamples'], part=['Stalk', 'Spore']),
         bai=expand("analysis/{sample}/{part}/mapped_dedup.bam.bai",
-                    sample=config['activesamples'], part=['stalk', 'spore']),
+                    sample=config['activesamples'], part=['Stalk', 'Spore']),
     output:
         "analysis/combined/all.vcf.gz",
     shell: """ {module}; module load bcftools

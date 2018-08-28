@@ -28,94 +28,94 @@ samples:
     test9:
         R1s: [sequence/I_S9_L001_R1_001.fastq.gz, ]
         R2s: [sequence/I_S9_L001_R2_001.fastq.gz, ]
-    fake-stalk:
+    fake-Stalk:
         R1s: [sequence/A_S1_L001_R1_001.fastq.gz, sequence/C_S3_L001_R1_001.fastq.gz, sequence/E_S5_L001_R1_001.fastq.gz, sequence/G_S7_L001_R1_001.fastq.gz, ]
         R2s: [sequence/A_S1_L001_R2_001.fastq.gz, sequence/C_S3_L001_R2_001.fastq.gz, sequence/E_S5_L001_R2_001.fastq.gz, sequence/G_S7_L001_R2_001.fastq.gz, ]
-    fake-spore:
+    fake-Spore:
         R1s: [sequence/B_S2_L001_R1_001.fastq.gz, sequence/D_S4_L001_R1_001.fastq.gz, sequence/F_S6_L001_R1_001.fastq.gz, sequence/H_S8_L001_R1_001.fastq.gz,]
         R2s: [sequence/B_S2_L001_R2_001.fastq.gz, sequence/D_S4_L001_R2_001.fastq.gz, sequence/F_S6_L001_R2_001.fastq.gz, sequence/H_S8_L001_R2_001.fastq.gz,]
-    P48-PB-F1-stalk:
-        R1s: []
-        R2s: []
+    P48-PB-F1-Stalk:
         i5: S502
         i7: N701
-    P48-PB-F1-spore:
-        R1s: []
-        R2s: []
+        Lane: 006
+    P48-PB-F1-Spore:
         i5: S502
         i7: N702
-    P48-PB-F2-stalk:
-        R1s: []
-        R2s: []
+        Lane: 006
+    P48-PB-F2-Stalk:
         i5: S502
         i7: N703
-    P48-PB-F2-spore:
-        R1s: []
-        R2s: []
+        Lane: 006
+    P48-PB-F2-Spore:
         i5: S502
         i7: N704
-    P48-PC-F3-stalk:
-        R1s: []
-        R2s: []
+        Lane: 006
+    P48-PC-F3-Stalk:
         i5: S503
         i7: N705
-    P48-PC-F3-spore:
-        R1s: []
-        R2s: []
+        Lane: 006
+    P48-PC-F3-Spore:
         i5: S503
         i7: N706
-    P48-PC-F4-stalk:
-        R1s: []
-        R2s: []
+        Lane: 006
+    P48-PC-F4-Stalk:
         i5: S503
         i7: N707
-    P48-PC-F4-spore:
-        R1s: []
-        R2s: []
+        Lane: 006
+    P48-PC-F4-Spore:
         i5: S503
         i7: N710
-    P48-PD-F5-stalk:
-        R1s: []
-        R2s: []
+    P48-PD-F5-Stalk:
         i5: S505
         i7: N702
-    P48-PD-F5-spore:
-        R1s: []
-        R2s: []
+    P48-PD-F5-Spore:
         i5: S505
         i7: N701
-    P48-PD-F6-stalk:
-        R1s: []
-        R2s: []
+    P48-PD-F6-Stalk:
         i5: S505
         i7: N704
-    P48-PD-F6-spore:
-        R1s: []
-        R2s: []
+    P48-PD-F6-Spore:
         i5: S505
         i7: N703
-    P48-PF-F7-stalk:
-        R1s: []
-        R2s: []
+    P48-PF-F7-Stalk:
         i5: S506
         i7: N706
-    P48-PF-F7-spore:
-        R1s: []
-        R2s: []
+    P48-PF-F7-Spore:
         i5: S506
         i7: N705
-    P48-PF-F8-stalk:
-        R1s: []
-        R2s: []
+    P48-PF-F8-Stalk:
         i5: S506
         i7: N710
-    P48-PF-F8-spore:
-        R1s: []
-        R2s: []
+    P48-PF-F8-Spore:
         i5: S506
         i7: N707
 
-activesamples: [fake]
+activesamples: [
+    P48-PB-F1,
+    P48-PB-F2,
+    P48-PC-F3,
+    P48-PC-F4,
+    P48-PD-F5,
+    P48-PD-F6,
+    P48-PF-F7,
+    P48-PF-F8
+    ]
+
+
+indexes:
+    S502: ATAGAGAG
+    S503: AGAGGATA
+    S505: CTCCTTAC
+    S506: TATGCAGT
+    N701: CGTACTAG
+    N702: TAAGGCGA
+    N703: TCCTGAGC
+    N704: AGGCAGAA
+    N705: TAGGCATG
+    N706: GGACTCCT
+    N707: CGAGGCTG
+    N710: CTCTCTAC
+ 
 
 flowersids: [01_109209, 01_1169436, 01_1470098, 01_1482177, 01_1512878,
 01_1847425, 01_2914125, 01_3501237, 01_4599648, 02_2784310, 02_4220620,
