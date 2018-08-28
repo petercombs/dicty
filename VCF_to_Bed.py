@@ -23,7 +23,7 @@ if __name__ == "__main__":
             print(
                 chrom, pos - 1, pos, "|".join([ref, alt]), sep="\t", file=args.snp_bed
             )
-        if len(ref) == 1 and len(alt) == 1:
+        elif len(ref) > 1 or len(alt) > 1:
             print(
                 chrom, pos - 1, pos, "|".join([ref, alt]), sep="\t", file=args.indel_bed
             )
