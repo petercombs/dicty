@@ -1,12 +1,23 @@
+""" Combine pseudo p-values from stalks and spores
+
+I am not putting too much stock in the FET p-values as meaningful, so instead I
+use a pseudo p-value, which just takes the rank in the list (normalized by the
+number of SNPs) and treats that as a p-value.  This automatically fulfills
+assumptions of Fisher's method, which assumes only that the p-values input are
+drawn from a uniform distribution.
+
+
+"""
 import pandas as pd
 from numpy import arange, log10
-from argparse import ArgumentParser, FileType
+from argparse import ArgumentParser
 from scipy.stats import combine_pvalues
 from tqdm import tqdm
 from matplotlib.pyplot import plot, scatter, xlabel, ylabel, savefig
 
 
 def parse_args():
+    "Program specific argument parsing"
     parser = ArgumentParser()
     parser.add_argument("--output-prefix", "-o")
     parser.add_argument("scores", nargs="+")
