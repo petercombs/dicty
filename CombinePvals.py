@@ -25,7 +25,7 @@ if __name__ == "__main__":
             1 + pd.Series(index=fet_pvals.index, data=arange(n)).sort_index()
         ) / n
         pvals_to_combine_fwd[file] = semi_ps
-        pvals_to_combine_rev[file] = 1 - semi_ps
+        pvals_to_combine_rev[file] = 1 - semi_ps + 1/n
 
     pvals_to_combine_fwd = pd.DataFrame(pvals_to_combine_fwd)
     pvals_to_combine_rev = pd.DataFrame(pvals_to_combine_rev)
@@ -42,5 +42,5 @@ if __name__ == "__main__":
             combine_pvalues(pvals_to_combine_rev.loc[ix], method="fisher") * 2
         )[1]
 
-    combined_pvals_fwd.to_csv(args.output + ".Stalk.tsv", sep="\t")
-    combined_pvals_rev.to_csv(args.output + ".Spore.tsv", sep="\t")
+    combined_pvals_fwd.to_csv(args.output_prefix + ".Stalk.tsv", sep="\t")
+    combined_pvals_rev.to_csv(args.output_prefix + ".Spore.tsv", sep="\t")
