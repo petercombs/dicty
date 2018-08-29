@@ -19,7 +19,7 @@ def read_snpcounts(fname):
         next(fh) # Skip header
         for line in fh:
             chr, pos, ref, alt, nonra = line.split()
-            outdict[(chr, pos)] = [int(ref), int(alt)]
+            outdict[(chr, int(pos))] = [int(ref), int(alt)]
     return outdict
 
 def parse_args():
@@ -45,7 +45,7 @@ if __name__ == "__main__":
             [args.snp_count_1[pos][0], args.snp_count_1[pos][1]],
             [args.snp_count_2[pos][0], args.snp_count_2[pos][1]],
         ]
-        out["|".join(str(i) for i in pos)] = pool.apply_async(fisher_exact, [table])
+        out["{}:{:07d}".format(*pos)] = pool.apply_async(fisher_exact, [table])
 
     for id in tqdm(out):
         odds_r, pval = out[id].get()
