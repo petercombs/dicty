@@ -17,6 +17,11 @@
                 "time": "6:00:00"
 
         },
+        "bcf_call_variants":{
+                "cpus": 4,
+                "time": "6:00:00"
+
+        },
         "dedup" :
         {
                 "time": "12:00:00",
