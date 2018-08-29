@@ -1,8 +1,9 @@
 import pandas as pd
-from numpy import arange
+from numpy import arange, log10
 from argparse import ArgumentParser, FileType
 from scipy.stats import combine_pvalues
 from tqdm import tqdm
+from matplotlib.pyplot import plot, scatter, xlabel, ylabel, savefig
 
 
 def parse_args():
@@ -21,9 +22,8 @@ if __name__ == "__main__":
     for file in args.scores:
         fet_pvals = pd.read_table(file, squeeze=True, header=None, index_col=0)
         n = len(fet_pvals)
-        semi_ps = (
-            1 + pd.Series(index=fet_pvals.index, data=arange(n)).sort_index()
-        ) / n
+        expected = arange(1, n + 1) / n
+        semi_ps = pd.Series(index=fet_pvals.index, data=expected).sort_index()
         pvals_to_combine_fwd[file] = semi_ps
         pvals_to_combine_rev[file] = 1 - semi_ps + 1/n
 
@@ -44,3 +44,19 @@ if __name__ == "__main__":
 
     combined_pvals_fwd.to_csv(args.output_prefix + ".Stalk.tsv", sep="\t")
     combined_pvals_rev.to_csv(args.output_prefix + ".Spore.tsv", sep="\t")
+
+    scatter(
+        -log10(expected),
+        -log10(combined_pvals_fwd.sort_values()),
+        label="Stalk? specific",
+    )
+    scatter(
+        -log10(expected),
+        -log10(combined_pvals_rev.sort_values()),
+        label="Spore? specific",
+    )
+
+    plot([0, 17], [0, 17], "r:")
+    xlabel("Expected")
+    ylabel("Observed")
+    savefig("analysis/results/combined_pvals_fwd_and_rev.png")
