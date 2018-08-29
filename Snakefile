@@ -332,7 +332,38 @@ rule map_gdna:
 		| samtools sort -o {output} -T {params.outdir}/{wildcards.sample}_bowtie2_sorting
         """
 
-rule contamination_rate:
+rule middle_seqs:
+    input:
+        getreads(1)
+    output:
+        "analysis/{sample}/{part}/middle_{n}.fasta"
+    params:
+        n = lambda wildcards: int(wildcards.n) * 2
+    shell: """
+        zcat {input} \
+        | awk 'NR % 4 == 2 && NR > 4*{wildcards.n} {{ printf ">%s \\n%s \\n", NR, $1 }}' \
+        | head -n {params.n} \
+        > {output}
+        """
+
+rule blast_contamination:
+    input:
+        "{sample}/middle_10000.fasta"
+    output:
+        "{sample}/blastout.tsv",
+    shell: """
+    {module}
+    module load blast
+    blastn \
+        -db nt \
+        -outfmt "6 qseqid sskingdoms sscinames staxids" \
+        -max_target_seqs 1 \
+        -query {input} \
+        | uniq --check-chars 5 \
+        > {output}
+        """
+
+rule ecoli_contamination_rate:
     input:
         bams=expand('analysis/{sample}/{part}/mapped_dedup.bam',
                 sample=config['activesamples'], part=['Stalk', 'Spore']),
