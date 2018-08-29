@@ -44,13 +44,14 @@ rule all:
 
 rule score_snps:
     input:
-        "analysis/{sample}/Stalk/snp_counts.tsv",
-        "analysis/{sample}/Spore/snp_counts.tsv",
+        stalk="analysis/{sample}/Stalk/snp_counts.tsv",
+        spore="analysis/{sample}/Spore/snp_counts.tsv",
+        code="ScoreSnps.py",
     output:
         "analysis/results/{sample}_scores.tsv"
     shell: """
     source activate fraserconda
-    python ScoreSnps.py {input} {output}
+    python ScoreSnps.py {input.stalk} {input.spore} {output}
     """
 
 rule snp_counts:
@@ -72,12 +73,14 @@ rule snp_counts:
 
 rule fisher_pvalues:
     input:
-        expand("analysis/results/{sample}_scores.tsv", sample=config['activesamples'])
+        scores=expand("analysis/results/{sample}_scores.tsv", sample=config['activesamples']),
+        code="CombinePvals.py"
     output:
         'analysis/results/combined.Stalk.tsv',
         'analysis/results/combined.Spore.tsv',
     shell: """ source activate fraserconda
-    python CombinePvals.py --output analysis/results/combined {input}
+    export MPLBACKEND=Agg
+    python CombinePvals.py --output analysis/results/combined {input.scores}
     """
 
 ## Generic Rules
