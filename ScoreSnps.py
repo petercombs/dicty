@@ -50,8 +50,10 @@ if __name__ == "__main__":
 
     in_both = set(args.stalk_count).intersection(args.spore_count)
     out_pvals = {}
-    out_stalk_altratio = {}
-    out_spore_altratio = {}
+    out_stalk_ref = {}
+    out_stalk_alt = {}
+    out_spore_ref = {}
+    out_spore_alt = {}
     pool = Pool()
     for pos in tqdm(in_both):
         table = [
@@ -60,22 +62,37 @@ if __name__ == "__main__":
         ]
         snpid = "{}:{:07d}".format(*pos)
         out_pvals[snpid] = pool.apply_async(fisher_exact, [table])
-        out_stalk_altratio[snpid] = args.stalk_count[pos][1] / (
-            (args.stalk_count[pos][0] + args.stalk_count[pos][1]) or 1
-        )
-        out_spore_altratio[snpid] = args.spore_count[pos][1] / (
-            (args.spore_count[pos][0] + args.spore_count[pos][1]) or 1
-        )
+        out_stalk_ref[snpid] = args.stalk_count[pos][0]
+        out_stalk_alt[snpid] = args.stalk_count[pos][1]
+        out_spore_ref[snpid] = args.spore_count[pos][0]
+        out_spore_alt[snpid] = args.spore_count[pos][1]
 
     for id in tqdm(out_pvals):
         odds_r, pval = out_pvals[id].get()
-        if odds_r > 0:
+        if odds_r > 1:
             out_pvals[id] = pval / 2
         else:
             out_pvals[id] = 1 - pval / 2
     out = pd.DataFrame(
-        {"pval": out_pvals, "stalk": out_stalk_altratio, "spore": out_spore_altratio}
+        {
+            "pval": out_pvals,
+            "stalk_ref": out_stalk_ref,
+            "stalk_alt": out_stalk_alt,
+            "spore_ref": out_spore_ref,
+            "spore_alt": out_spore_alt,
+        }
     )
+    out["stalk_ratio"] = out.stalk_alt / (out.stalk_alt + out.stalk_ref)
+    out["spore_ratio"] = out.spore_alt / (out.spore_alt + out.spore_ref)
 
     out.index.name = "snp_id"
-    out.sort_values(by="pval").to_csv(args.output, sep="\t")
+    out = out.sort_values(by="pval")
+    out["rank"] = pd.np.nan
+    i = 0
+    for ix, row in out.iterrows():
+        if (row.stalk_alt + row.spore_alt > 0) and (row.stalk_ref + row.spore_ref > 0):
+            i += 1
+            out.ix[ix, "rank"] = i
+
+    out["maxrank"] = i
+    out.to_csv(args.output, sep="\t", float_format="%5e")

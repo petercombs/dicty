@@ -26,7 +26,7 @@ from matplotlib.pyplot import (
     subplot,
     close,
 )
-from numpy.random import shuffle
+from numpy.random import shuffle, rand
 from tqdm import tqdm
 
 
@@ -48,17 +48,27 @@ if __name__ == "__main__":
     pvals_to_combine_fwd = {}
     pvals_to_combine_rev = {}
     pvals_to_combine_rand = {}
+
     fet_data = {}
-    for file in args.scores:
-        fet_pvals = pd.read_table(file, squeeze=True, index_col=0).sort_values("pval")
+
+    for file in tqdm(args.scores):
+        fet_file = pd.read_table(file, squeeze=True, index_col=0)
+        fet_pvals = fet_file.pval.copy()
+        fet_pvals[
+            (fet_file.stalk_alt + fet_file.spore_alt == 0)
+            | (fet_file.stalk_ref + fet_file.spore_ref == 0)
+        ] = pd.np.nan
+
         n = len(fet_pvals)
-        expected = arange(1, n + 1) / n
-        semi_ps = pd.Series(index=fet_pvals.index, data=expected).sort_index()
+        fet_pvals_jitter = (fet_pvals + .01 * rand() * fet_pvals.min()).sort_index()
+
+        expected = arange(1, n + 1) / fet_pvals.count() * pd.np.sign(fet_pvals)
+        semi_ps = fet_file['rank'] / fet_file.maxrank
         semi_ps_rand = semi_ps.copy()
         shuffle(semi_ps_rand)
-        fet_data[file] = fet_pvals.sort_index()
+        fet_data[file] = fet_file.sort_index()
         pvals_to_combine_fwd[file] = semi_ps
-        pvals_to_combine_rev[file] = 1 - semi_ps + 1 / n
+        pvals_to_combine_rev[file] = 1 - semi_ps + 1 / fet_file['rank'].max()
         pvals_to_combine_rand[file] = semi_ps_rand
 
     pvals_to_combine_fwd = pd.DataFrame(pvals_to_combine_fwd)
@@ -72,14 +82,14 @@ if __name__ == "__main__":
     for ix in tqdm(combined_pvals_fwd.index):
         # Multiply by two to correct for testing both ends
         combined_pvals_fwd[ix] = (
-            combine_pvalues(pvals_to_combine_fwd.loc[ix], method="fisher") * 2
+            combine_pvalues(pvals_to_combine_fwd.loc[ix].dropna(), method="fisher") * 2
         )[1]
         combined_pvals_rev[ix] = (
-            combine_pvalues(pvals_to_combine_rev.loc[ix], method="fisher") * 2
+            combine_pvalues(pvals_to_combine_rev.loc[ix].dropna(), method="fisher") * 2
         )[1]
 
         combined_pvals_rand[ix] = (
-            combine_pvalues(pvals_to_combine_rand.loc[ix], method="fisher") * 2
+            combine_pvalues(pvals_to_combine_rand.loc[ix].dropna(), method="fisher") * 2
         )[1]
 
     combined_pvals_fwd.sort_values(inplace=True)
