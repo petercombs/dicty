@@ -344,7 +344,7 @@ rule middle_seqs:
         n = lambda wildcards: int(wildcards.n) * 2
     shell: """
         zcat {input} \
-        | awk 'NR % 4 == 2 && NR > 4*{wildcards.n} {{ printf ">%s \\n%s \\n", NR, $1 }}' \
+        | awk 'NR % 4 == 2 && NR > 40 * {wildcards.n} {{ printf ">%s \\n%s \\n", NR, $1 }}' \
         | head -n {params.n} \
         > {output}
         """
