@@ -16,6 +16,8 @@ from scipy.stats import combine_pvalues
 from matplotlib.pyplot import (
     xlim,
     ylim,
+    xticks,
+    yticks,
     plot,
     scatter,
     xlabel,
@@ -25,6 +27,8 @@ from matplotlib.pyplot import (
     figure,
     subplot,
     close,
+    title,
+    tight_layout,
 )
 from numpy.random import shuffle, rand
 from tqdm import tqdm
@@ -101,13 +105,13 @@ if __name__ == "__main__":
 
     figure()
     scatter(
-        -log10(combined_pvals_rand), -log10(combined_pvals_fwd), label="Stalk? specific"
+        -log10(combined_pvals_rand), -log10(combined_pvals_fwd), label="Spore specific"
     )
     scatter(
-        -log10(combined_pvals_rand), -log10(combined_pvals_rev), label="Spore? specific"
+        -log10(combined_pvals_rand), -log10(combined_pvals_rev), label="Stalk specific"
     )
 
-    plot([0, 17], [0, 17], "r:")
+    plot([0, 7], [0, 7], "r:")
     xlabel("Expected")
     ylabel("Observed")
     legend(loc="lower right")
@@ -119,24 +123,54 @@ if __name__ == "__main__":
     assert n_rows * n_cols >= args.num_subplots
 
     for name, dataset in (
-        ("stalk", combined_pvals_fwd),
-        ("spore", combined_pvals_rev),
+        ("spore", combined_pvals_fwd),
+        ("stalk", combined_pvals_rev),
         ("random", combined_pvals_rand),
     ):
-        figure()
+        figure(figsize=(16, 12))
 
         for i in range(args.num_subplots):
             snp = dataset.index[i]
-            subplot(n_rows, n_cols, i + 1)
-            stalks = [fet_data[file].ix[snp, "stalk"] for file in args.scores]
-            spores = [fet_data[file].ix[snp, "spore"] for file in args.scores]
+            ax = subplot(n_rows, n_cols, i + 1)
+            title(
+                "{}\n{} samples - {:3.1e}".format(
+                    snp, len(pvals_to_combine_fwd.loc[snp].dropna()), dataset.loc[snp]
+                )
+            )
+            stalks = [
+                fet_data[file].loc[snp, "stalk_ratio"]
+                for file in args.scores
+                if (
+                    fet_data[file].loc[snp, "stalk_alt"]
+                    + fet_data[file].loc[snp, "spore_alt"]
+                )
+                > 0
+            ]
+            spores = [
+                fet_data[file].loc[snp, "spore_ratio"]
+                for file in args.scores
+                if (
+                    fet_data[file].loc[snp, "stalk_alt"]
+                    + fet_data[file].loc[snp, "spore_alt"]
+                )
+                > 0
+            ]
             scatter(stalks, spores)
-            xlim(0, 1)
-            ylim(0, 1)
+            plot([0, 1], [0, 1], "r:")
+            ax.set_aspect(1)
+            xlim(-0.1, 1.1)
+            ylim(-0.1, 1.1)
             if i % n_cols == 0:
                 ylabel("Spores")
+                yticks([0, .25, .5, .75, 1])
+            else:
+                yticks([])
             if i // n_cols == n_rows - 1:
                 xlabel("Stalks")
+                xticks([0, .5, 1])
+            else:
+                xticks([])
 
+        tight_layout()
         savefig(path.join(outdir, "{}_snps.png".format(name)))
         close()
