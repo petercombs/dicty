@@ -79,10 +79,12 @@ def make_tehranchigram(all_stalk_freqs, all_spore_freqs):
     figure()
     x = pd.Series(all_stalk_freqs)
     y = pd.Series(all_spore_freqs)
+    vmax = np.percentile( np.reshape(np.histogram2d(x, y, bins=20)[0], -1), 98)
+
     hist2d(
         x[isfinite(x) & isfinite(y)],
         y[isfinite(x) & isfinite(y)],
-        vmax=x.count() / 400,
+        vmax=vmax,
         bins=20,
     )
     xlabel("Stalk Frequency")
