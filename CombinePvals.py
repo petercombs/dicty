@@ -71,6 +71,11 @@ def make_qq_plot(combine_pvals_fwd, combined_pvals_rev, combined_pvals_rand):
     close()
 
 def make_tehranchigram(all_stalk_freqs, all_spore_freqs):
+    """Pre vs post plot
+
+    Of course, in this case, neither one is obviously pre or post-treatment, but
+    the point stands.
+    """
     figure()
     x = pd.Series(all_stalk_freqs)
     y = pd.Series(all_spore_freqs)
@@ -87,6 +92,10 @@ def make_tehranchigram(all_stalk_freqs, all_spore_freqs):
     close()
 
 def plot_top_snps(dataset, name, n=16):
+    """Plot stalk/spore frequencies of top SNPs
+
+    Each SNP gets its own window, with one point per sample.
+    """
     n_rows = int(ceil(sqrt(n)))
     n_cols = n // n_rows
     assert n_rows * n_cols >= n
