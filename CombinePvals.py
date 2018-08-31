@@ -75,9 +75,9 @@ def load_data(filenames):
             fet_file.iloc[:, 3:5].T.sum() > 10
         )
         fet_pvals[good_snps] = nan
-        if "all_good_snps" not in locals():
-            all_good_snps = good_snps.copy()
-        all_good_snps |= good_snps
+        if "any_good_snps" not in locals():
+            any_good_snps = good_snps * 0
+        any_good_snps += good_snps
 
         all_stalk_freqs.extend(fet_file.loc[great_snps, "stalk_ratio"])
         all_spore_freqs.extend(fet_file.loc[great_snps, "spore_ratio"])
@@ -105,7 +105,7 @@ def load_data(filenames):
         pvals_to_combine_rand,
         all_stalk_freqs,
         all_spore_freqs,
-        all_good_snps,
+        any_good_snps,
         fet_data,
     )
 
@@ -216,7 +216,7 @@ if __name__ == "__main__":
         pvals_to_combine_rand,
         all_stalk_freqs,
         all_spore_freqs,
-        all_good_snps,
+        any_good_snps,
         fet_data,
     ) = load_data(args.scores)
 
@@ -235,7 +235,7 @@ if __name__ == "__main__":
         rev_results_queue = {}
         rand_results_queue = {}
         with Pool() as pool:
-            for ix in tqdm(all_good_snps.index[all_good_snps]):
+            for ix in tqdm(any_good_snps.index[any_good_snps > 0]):
                 fwd_results_queue[ix] = pool.apply_async(
                     combine_pvalues, [pvals_to_combine_fwd.loc[ix].dropna(), "fisher"]
                 )
@@ -246,7 +246,7 @@ if __name__ == "__main__":
                     combine_pvalues, [pvals_to_combine_rand.loc[ix].dropna(), "fisher"]
                 )
 
-            for ix in tqdm(all_good_snps.index[all_good_snps]):
+            for ix in tqdm(any_good_snps.index[any_good_snps > 0]):
                 # Multiply by two to correct for testing both ends
                 combined_pvals_fwd[ix] = fwd_results_queue[ix].get()[1]
                 combined_pvals_rev[ix] = rev_results_queue[ix].get()[1]
