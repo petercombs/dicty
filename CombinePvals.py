@@ -10,7 +10,7 @@ drawn from a uniform distribution.
 """
 import pandas as pd
 from os import path
-from numpy import arange, log10
+from numpy import arange, log10, nan, ceil, sqrt, isfinite
 from argparse import ArgumentParser
 from scipy.stats import combine_pvalues
 from matplotlib.pyplot import (
@@ -23,13 +23,14 @@ from matplotlib.pyplot import (
     xlabel,
     ylabel,
     legend,
-    savefig,
     figure,
     subplot,
     close,
     title,
-    tight_layout,
+    hist2d,
 )
+from multiprocessing import Pool
+import matplotlib.pyplot as mpl
 from numpy.random import shuffle, rand
 from tqdm import tqdm
 
@@ -39,10 +40,89 @@ def parse_args():
     parser = ArgumentParser()
     parser.add_argument("--output-prefix", "-o")
     parser.add_argument("--num-subplots", type=int, default=16)
+    parser.add_argument(
+        "--skip-fisher",
+        default=False,
+        action="store_true",
+        help="This is intended for situations where I'm tweaking"
+        " the parameters of the ancillary plots and want to see the"
+        " results more quickly",
+    )
     parser.add_argument("scores", nargs="+")
 
     args = parser.parse_args()
     return args
+
+
+def make_qq_plot(combine_pvals_fwd, combined_pvals_rev, combined_pvals_rand):
+    figure()
+    scatter(
+        -log10(combined_pvals_rand), -log10(combined_pvals_fwd), label="Spore specific"
+    )
+    scatter(
+        -log10(combined_pvals_rand), -log10(combined_pvals_rev), label="Stalk specific"
+    )
+
+    plot([0, 7], [0, 7], "r:")
+    xlabel("-log10 p Expected")
+    ylabel("-log10 p Observed")
+    legend(loc="lower right")
+    mpl.savefig(path.join(outdir, "combined_pvals_fwd_and_rev.png"))
+    close()
+
+
+def plot_top_snps(dataset, name, n=16):
+    n_rows = int(ceil(sqrt(n)))
+    n_cols = n // n_rows
+    assert n_rows * n_cols >= n
+
+    figure(figsize=(16, 12))
+
+    for i in range(n):
+        snp = dataset.index[i]
+        ax = subplot(n_rows, n_cols, i + 1)
+        title(
+            "{}\n{} samples - {:3.1e}".format(
+                snp, len(pvals_to_combine_fwd.loc[snp].dropna()), dataset.loc[snp]
+            )
+        )
+        stalks = [
+            fet_data[file].loc[snp, "stalk_ratio"]
+            for file in args.scores
+            if (
+                fet_data[file].loc[snp, "stalk_alt"]
+                + fet_data[file].loc[snp, "spore_alt"]
+            )
+            > 0
+        ]
+        spores = [
+            fet_data[file].loc[snp, "spore_ratio"]
+            for file in args.scores
+            if (
+                fet_data[file].loc[snp, "stalk_alt"]
+                + fet_data[file].loc[snp, "spore_alt"]
+            )
+            > 0
+        ]
+        scatter(stalks, spores)
+        plot([0, 1], [0, 1], "r:")
+        ax.set_aspect(1)
+        xlim(-0.1, 1.1)
+        ylim(-0.1, 1.1)
+        if i % n_cols == 0:
+            ylabel("Spores")
+            yticks([0, .25, .5, .75, 1])
+        else:
+            yticks([])
+        if i // n_cols == n_rows - 1:
+            xlabel("Stalks")
+            xticks([0, .5, 1])
+        else:
+            xticks([])
+
+    mpl.tight_layout()
+    mpl.savefig(path.join(outdir, "{}_snps.png".format(name)))
+    close()
 
 
 if __name__ == "__main__":
@@ -102,75 +182,15 @@ if __name__ == "__main__":
 
     combined_pvals_fwd.to_csv(args.output_prefix + ".Stalk.tsv", sep="\t")
     combined_pvals_rev.to_csv(args.output_prefix + ".Spore.tsv", sep="\t")
+    make_qq_plot(combined_pvals_fwd, combined_pvals_rev, combined_pvals_rand)
 
     figure()
-    scatter(
-        -log10(combined_pvals_rand), -log10(combined_pvals_fwd), label="Spore specific"
     )
-    scatter(
-        -log10(combined_pvals_rand), -log10(combined_pvals_rev), label="Stalk specific"
-    )
-
-    plot([0, 7], [0, 7], "r:")
-    xlabel("Expected")
-    ylabel("Observed")
-    legend(loc="lower right")
-    savefig(path.join(outdir, "combined_pvals_fwd_and_rev.png"))
     close()
-
-    n_rows = int(pd.np.ceil(pd.np.sqrt(args.num_subplots)))
-    n_cols = args.num_subplots // n_rows
-    assert n_rows * n_cols >= args.num_subplots
 
     for name, dataset in (
         ("spore", combined_pvals_fwd),
         ("stalk", combined_pvals_rev),
         ("random", combined_pvals_rand),
     ):
-        figure(figsize=(16, 12))
-
-        for i in range(args.num_subplots):
-            snp = dataset.index[i]
-            ax = subplot(n_rows, n_cols, i + 1)
-            title(
-                "{}\n{} samples - {:3.1e}".format(
-                    snp, len(pvals_to_combine_fwd.loc[snp].dropna()), dataset.loc[snp]
-                )
-            )
-            stalks = [
-                fet_data[file].loc[snp, "stalk_ratio"]
-                for file in args.scores
-                if (
-                    fet_data[file].loc[snp, "stalk_alt"]
-                    + fet_data[file].loc[snp, "spore_alt"]
-                )
-                > 0
-            ]
-            spores = [
-                fet_data[file].loc[snp, "spore_ratio"]
-                for file in args.scores
-                if (
-                    fet_data[file].loc[snp, "stalk_alt"]
-                    + fet_data[file].loc[snp, "spore_alt"]
-                )
-                > 0
-            ]
-            scatter(stalks, spores)
-            plot([0, 1], [0, 1], "r:")
-            ax.set_aspect(1)
-            xlim(-0.1, 1.1)
-            ylim(-0.1, 1.1)
-            if i % n_cols == 0:
-                ylabel("Spores")
-                yticks([0, .25, .5, .75, 1])
-            else:
-                yticks([])
-            if i // n_cols == n_rows - 1:
-                xlabel("Stalks")
-                xticks([0, .5, 1])
-            else:
-                xticks([])
-
-        tight_layout()
-        savefig(path.join(outdir, "{}_snps.png".format(name)))
-        close()
+        plot_top_snps(dataset, name, n=args.num_subplots)
