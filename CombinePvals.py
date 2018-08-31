@@ -70,6 +70,21 @@ def make_qq_plot(combine_pvals_fwd, combined_pvals_rev, combined_pvals_rand):
     mpl.savefig(path.join(outdir, "combined_pvals_fwd_and_rev.png"))
     close()
 
+def make_tehranchigram(all_stalk_freqs, all_spore_freqs):
+    figure()
+    x = pd.Series(all_stalk_freqs)
+    y = pd.Series(all_spore_freqs)
+    hist2d(
+        x[isfinite(x) & isfinite(y)],
+        y[isfinite(x) & isfinite(y)],
+        vmax=x.count() / 400,
+        bins=20,
+    )
+    xlabel("Stalk Frequency")
+    ylabel("Spore Frequency")
+    mpl.colorbar()
+    mpl.savefig(path.join(outdir, "all_prepost.png"))
+    close()
 
 def plot_top_snps(dataset, name, n=16):
     n_rows = int(ceil(sqrt(n)))
@@ -135,13 +150,23 @@ if __name__ == "__main__":
 
     fet_data = {}
 
+    all_stalk_freqs = []
+    all_spore_freqs = []
+
     for file in tqdm(args.scores):
         fet_file = pd.read_table(file, squeeze=True, index_col=0)
         fet_pvals = fet_file.pval.copy()
-        fet_pvals[
-            (fet_file.stalk_alt + fet_file.spore_alt == 0)
-            | (fet_file.stalk_ref + fet_file.spore_ref == 0)
-        ] = pd.np.nan
+        good_snps = isfinite(fet_file["rank"])
+        great_snps = (fet_file.iloc[:, 1:3].T.sum() > 10) & (
+            fet_file.iloc[:, 3:5].T.sum() > 10
+        )
+        fet_pvals[good_snps] = nan
+        if "all_good_snps" not in locals():
+            all_good_snps = good_snps.copy()
+        all_good_snps |= good_snps
+
+        all_stalk_freqs.extend(fet_file.loc[great_snps, "stalk_ratio"])
+        all_spore_freqs.extend(fet_file.loc[great_snps, "spore_ratio"])
 
         n = len(fet_pvals)
         fet_pvals_jitter = (fet_pvals + .01 * rand() * fet_pvals.min()).sort_index()
@@ -184,9 +209,7 @@ if __name__ == "__main__":
     combined_pvals_rev.to_csv(args.output_prefix + ".Spore.tsv", sep="\t")
     make_qq_plot(combined_pvals_fwd, combined_pvals_rev, combined_pvals_rand)
 
-    figure()
-    )
-    close()
+    make_tehranchigram(all_stalk_freqs, all_spore_freqs)
 
     for name, dataset in (
         ("spore", combined_pvals_fwd),
