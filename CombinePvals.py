@@ -51,8 +51,8 @@ def parse_args():
     )
     parser.add_argument("scores", nargs="+")
 
-    args = parser.parse_args()
-    return args
+    parsed_args = parser.parse_args()
+    return parsed_args
 
 
 def load_data(filenames):
@@ -126,6 +126,7 @@ def make_qq_plot(combined_pvals_fwd, combined_pvals_rev, combined_pvals_rand):
     mpl.savefig(path.join(outdir, "combined_pvals_fwd_and_rev.png"))
     close()
 
+
 def make_tehranchigram(all_stalk_freqs, all_spore_freqs):
     """Pre vs post plot
 
@@ -135,13 +136,10 @@ def make_tehranchigram(all_stalk_freqs, all_spore_freqs):
     figure()
     x = pd.Series(all_stalk_freqs)
     y = pd.Series(all_spore_freqs)
-    vmax = np.percentile( np.reshape(np.histogram2d(x, y, bins=20)[0], -1), 98)
+    vmax = np.percentile(np.reshape(np.histogram2d(x, y, bins=20)[0], -1), 98)
 
     hist2d(
-        x[isfinite(x) & isfinite(y)],
-        y[isfinite(x) & isfinite(y)],
-        vmax=vmax,
-        bins=20,
+        x[isfinite(x) & isfinite(y)], y[isfinite(x) & isfinite(y)], vmax=vmax, bins=20
     )
     xlabel("Stalk Frequency")
     ylabel("Spore Frequency")
@@ -149,7 +147,8 @@ def make_tehranchigram(all_stalk_freqs, all_spore_freqs):
     mpl.savefig(path.join(outdir, "all_prepost.png"))
     close()
 
-def plot_top_snps(dataset, name, n=16):
+
+def plot_top_snps(dataset, name, all_fet_data, n=16):
     """Plot stalk/spore frequencies of top SNPs
 
     Each SNP gets its own window, with one point per sample.
@@ -169,20 +168,20 @@ def plot_top_snps(dataset, name, n=16):
             )
         )
         stalks = [
-            fet_data[file].loc[snp, "stalk_ratio"]
+            all_fet_data[file].loc[snp, "stalk_ratio"]
             for file in args.scores
             if (
-                fet_data[file].loc[snp, "stalk_alt"]
-                + fet_data[file].loc[snp, "spore_alt"]
+                all_fet_data[file].loc[snp, "stalk_alt"]
+                + all_fet_data[file].loc[snp, "spore_alt"]
             )
             > 0
         ]
         spores = [
-            fet_data[file].loc[snp, "spore_ratio"]
+            all_fet_data[file].loc[snp, "spore_ratio"]
             for file in args.scores
             if (
-                fet_data[file].loc[snp, "stalk_alt"]
-                + fet_data[file].loc[snp, "spore_alt"]
+                all_fet_data[file].loc[snp, "stalk_alt"]
+                + all_fet_data[file].loc[snp, "spore_alt"]
             )
             > 0
         ]
@@ -264,9 +263,9 @@ if __name__ == "__main__":
 
     make_tehranchigram(all_stalk_freqs, all_spore_freqs)
 
-    for name, dataset in (
+    for i_name, i_dataset in (
         ("spore", combined_pvals_fwd),
         ("stalk", combined_pvals_rev),
         ("random", combined_pvals_rand),
     ):
-        plot_top_snps(dataset, name, n=args.num_subplots)
+        plot_top_snps(i_dataset, i_name, fet_data, n=args.num_subplots)
