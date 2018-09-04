@@ -90,7 +90,12 @@ if __name__ == "__main__":
     out["rank"] = pd.np.nan
     i = 0
     for ix, row in out.iterrows():
-        if (row.stalk_alt + row.spore_alt > 0) and (row.stalk_ref + row.spore_ref > 0):
+        if (
+            (row.stalk_alt + row.spore_alt > 0)
+            and (row.stalk_ref + row.spore_ref > 0)
+            and (row.stalk_ref + row.stalk_alt > 0)
+            and (row.spore_ref + row.spore_alt > 0)
+        ):
             i += 1
             out.ix[ix, "rank"] = i
 

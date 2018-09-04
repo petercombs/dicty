@@ -259,6 +259,12 @@ if __name__ == "__main__":
         combined_pvals_fwd.to_csv(args.output_prefix + ".Stalk.tsv", sep="\t")
         combined_pvals_rev.to_csv(args.output_prefix + ".Spore.tsv", sep="\t")
 
+    print(
+        "{} SNPs with any good samples\n{} SNPs with all good samples".format(
+            (any_good_snps > 0).sum(), (any_good_snps == len(args.scores)).sum()
+        )
+    )
+
     make_qq_plot(combined_pvals_fwd, combined_pvals_rev, combined_pvals_rand)
 
     make_tehranchigram(all_stalk_freqs, all_spore_freqs)

@@ -36,6 +36,7 @@ def getreadscomma(readnum):
 
 rule all:
     input:
+        'analysis/results/combined.Spore.tsv',
         expand('analysis/results/{sample}_scores.tsv',
                 sample=config['activesamples']
         )
