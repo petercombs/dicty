@@ -225,6 +225,7 @@ rule bcf_call_variants:
         ref_fai="Reference/combined_dd_ec.fasta.fai",
         ref_dict="Reference/combined_dd_ec.dict",
         regions="Reference/reference.regions",
+        #dir=ancient('analysis/combined/'),
         bam=expand("analysis/{sample}/{part}/mapped_dedup.bam",
                     sample=config['activesamples'], part=['Stalk', 'Spore']),
         bai=expand("analysis/{sample}/{part}/mapped_dedup.bam.bai",
@@ -280,7 +281,7 @@ rule call_variants:
 
 rule combine_variants:
     input:
-        dir=ancient("analysis/combined/"),
+        #dir=ancient("analysis/combined/"),
         ref_fasta="Reference/combined_dd_ec.fasta",
         infastas=expand("analysis/{sample}/raw_variants_uncalibrated.p.g.vcf",
                 sample=config['samples']
@@ -322,7 +323,7 @@ rule map_gdna:
     input:
         unpack(getreads(1)),
         unpack(getreads(2)),
-        ancient(path.join(analysis_dir, "{sample}", "{part}")+'/'),
+        #ancient(path.join(analysis_dir, "{sample}", "{part}")+'/'),
         bt2_index="Reference/combined_dd_ec.1.bt2",
         fasta="Reference/combined_dd_ec.fasta",
     output:
@@ -386,6 +387,7 @@ rule blast_contamination:
 
 rule ecoli_contamination_rate:
     input:
+        #dir=ancient('analysis/combined/'),
         bams=expand('analysis/{sample}/{part}/mapped_dedup.bam',
                 sample=config['activesamples'], part=['Stalk', 'Spore']),
         bais=expand('analysis/{sample}/{part}/mapped_dedup.bam.bai',
@@ -403,7 +405,7 @@ rule ecoli_contamination_rate:
 rule split_flowers:
     input:
         fasta="analysis/flowers2010/flowers2010.fasta",
-        dir=ancient("analysis/flowers2010/"),
+        #dir=ancient("analysis/flowers2010/"),
     output:
         expand("analysis/flowers2010/{id}.fasta", id=config['flowersids'])
     run:
