@@ -167,6 +167,21 @@ rule dedup:
 		INPUT={input} OUTPUT={output} METRICS_FILE={log}
         """
 
+rule dedup_cram:
+    input: "{sample}.cram"
+    output: ("{sample}_dedup.cram")
+    log: "{sample}_dedup.log"
+    shell: """{module}; module load picard/2.8.1
+    picard MarkDuplicates \
+        SORTING_COLLECTION_SIZE_RATIO=.01 \
+		MAX_FILE_HANDLES_FOR_READ_ENDS_MAP=1000 \
+        MAX_RECORDS_IN_RAM=100000 \
+		READ_NAME_REGEX=null \
+		REMOVE_DUPLICATES=true \
+		DUPLICATE_SCORING_STRATEGY=RANDOM \
+		INPUT={input} OUTPUT={output} METRICS_FILE={log}
+        """
+
 rule makedir:
     output: "{prefix}/"
     shell: "mkdir -p {wildcards.prefix}"
@@ -308,9 +323,10 @@ rule map_gdna:
         unpack(getreads(1)),
         unpack(getreads(2)),
         ancient(path.join(analysis_dir, "{sample}", "{part}")+'/'),
-        bt2_index="Reference/combined_dd_ec.1.bt2"
+        bt2_index="Reference/combined_dd_ec.1.bt2",
+        fasta="Reference/combined_dd_ec.fasta",
     output:
-        path.join(analysis_dir, "{sample}", "{part}", "mapped.bam")
+        path.join(analysis_dir, "{sample}", "{part}", "mapped.cram")
     log:
         path.join(analysis_dir, "{sample}", "{part}", "bowtie2.log")
     params:
@@ -333,7 +349,8 @@ rule map_gdna:
 		-1 {params.r1s} \
 		-2 {params.r2s} \
 		| samtools view -b \
-		| samtools sort -o {output} -T {params.outdir}/{wildcards.sample}_bowtie2_sorting
+		| samtools sort -o {output} -T {params.outdir}/{wildcards.sample}_bowtie2_sorting \
+            --output-fmt CRAM --reference {input.fasta}
         """
 
 rule middle_seqs:
