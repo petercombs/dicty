@@ -314,8 +314,8 @@ rule map_gdna:
         bt2_index="Reference/combined_dd_ec.1.bt2",
         fasta="Reference/combined_dd_ec.fasta",
     output:
-        path.join(analysis_dir, "{sample}", "{part}", "mapped.cram")
-    log:
+        path.join(analysis_dir, "{sample}", "{part}", "mapped.bam")
+    benchmark:
         path.join(analysis_dir, "{sample}", "{part}", "bowtie2.log")
     params:
         index=lambda wildcards, input: input.bt2_index[:-6],
@@ -337,8 +337,8 @@ rule map_gdna:
 		-1 {params.r1s} \
 		-2 {params.r2s} \
 		| samtools view -b \
-		| samtools sort -o {output} -T {params.outdir}/{wildcards.sample}_bowtie2_sorting \
-            --output-fmt CRAM --reference {input.fasta}
+		| samtools sort  -T {params.outdir}/{wildcards.sample}_bowtie2_sorting \
+            --output-fmt bam -o {output} -
         """
 
 rule middle_seqs:
