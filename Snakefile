@@ -49,6 +49,7 @@ rule score_snps:
         stalk="analysis/{sample}/Stalk/snp_counts.tsv",
         spore="analysis/{sample}/Spore/snp_counts.tsv",
         code="ScoreSnps.py",
+        dir="analysis/results/exists",
     output:
         "analysis/results/{sample}_scores.tsv"
     conda: "envs/dicty.yaml"
