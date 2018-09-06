@@ -1,6 +1,6 @@
 configfile: "config.yaml"
 
-localrules: makedir, all
+localrules: makedir, all, exists
 
 # Directories
 from os import path
@@ -9,6 +9,7 @@ analysis_dir = 'analysis'
 # External programs
 gzip = 'pigz'
 module = 'module () { eval `$LMOD_CMD bash "$@"` }'
+module = ''
 star = '''STAR \
 --outSAMattributes MD NH --clip5pNbases 6 --outSAMtype BAM Unsorted \
 --readFilesCommand zcat --limitBAMsortRAM 20000000000 '''
@@ -88,20 +89,19 @@ rule fisher_pvalues:
 rule index_bam:
     input: "{sample}.bam"
     output: "{sample}.bam.bai"
-    log: "{sample}.bam.bai_log"
-    shell: "{module}; module load samtools; samtools index {input}"
+    shell: " module load samtools; samtools index {input}"
 
 rule namesort_bam:
     input: "{sample}.bam"
     output: "{sample}.namesort.bam"
-    shell: """ {module}; module load samtools
+    shell: """  module load samtools
     samtools sort -n -o {output} {input}
     """
 rule ecoli_bam:
     input:
         bam="{sample}/bowtie2_dedup.bam",
     output: "{sample}/ecoli.bam"
-    shell: "{module}; module load samtools; samtools view -bo {output} {input} NC_012967.1"""
+    shell: " module load samtools; samtools view -bo {output} {input} NC_012967.1"""
 
 rule ecoli_reads:
     input: "{sample}/ecoli.namesort.bam"
@@ -110,7 +110,7 @@ rule ecoli_reads:
         r2s="{sample}/ecoli.2.fastq.gz",
         bad_pairs="{sample}/bad_pairs.txt",
     shell:"""
-    {module}; module load bedtools samtools
+     module load bedtools samtools
 
     rm -f {wildcards.sample}/{{r1,r2}}.fq
     mkfifo {wildcards.sample}/r1.fq
@@ -135,7 +135,7 @@ rule ecoli_remapped:
     params:
         index=lambda wildcards, input: input.bt2_index[:-6],
     threads: 6
-    shell: """{module}; module load samtools/1.3 bowtie2
+    shell: """ module load samtools/1.3 bowtie2
     bowtie2 \
 		--very-sensitive-local \
 		-p 11 \
@@ -155,8 +155,8 @@ rule ecoli_remapped:
 rule dedup:
     input: "{sample}.bam"
     output: ("{sample}_dedup.bam")
-    log: "{sample}_dedup.log"
-    shell: """{module}; module load picard/2.8.1
+    benchmark: "{sample}_dedup.log"
+    shell: """ module load picard/2.17.10
     picard MarkDuplicates \
         SORTING_COLLECTION_SIZE_RATIO=.01 \
 		MAX_FILE_HANDLES_FOR_READ_ENDS_MAP=1000 \
@@ -164,41 +164,28 @@ rule dedup:
 		READ_NAME_REGEX=null \
 		REMOVE_DUPLICATES=true \
 		DUPLICATE_SCORING_STRATEGY=RANDOM \
-		INPUT={input} OUTPUT={output} METRICS_FILE={log}
-        """
-
-rule dedup_cram:
-    input: "{sample}.cram"
-    output: ("{sample}_dedup.cram")
-    log: "{sample}_dedup.log"
-    shell: """{module}; module load picard/2.8.1
-    picard MarkDuplicates \
-        SORTING_COLLECTION_SIZE_RATIO=.01 \
-		MAX_FILE_HANDLES_FOR_READ_ENDS_MAP=1000 \
-        MAX_RECORDS_IN_RAM=100000 \
-		READ_NAME_REGEX=null \
-		REMOVE_DUPLICATES=true \
-		DUPLICATE_SCORING_STRATEGY=RANDOM \
-		INPUT={input} OUTPUT={output} METRICS_FILE={log}
+		INPUT={input} OUTPUT={output} METRICS_FILE={output}_dedup.metrics
         """
 
 rule makedir:
     output: "{prefix}/"
     shell: "mkdir -p {wildcards.prefix}"
 
+rule exists:
+    output: touch('{prefix}/exists')
 
 # SNP calling
 
 rule bowtie2_build:
     input: "{base}.fasta"
     output: "{base}.1.bt2"
-    log:    "{base}.bt2.log"
-    shell: "{module}; module load bowtie2; bowtie2-build --offrate 3 {input} {wildcards.base}"
+    benchmark:    "{base}.bt2.log"
+    shell: " module load bowtie2; bowtie2-build --offrate 3 {input} {wildcards.base}"
 
 rule fadict:
     input: "{file}.fasta"
     output: "{file}.dict"
-    shell: "{module}; module load picard; picard CreateSequenceDictionary R={input} O={output}"
+    shell: " module load picard; picard CreateSequenceDictionary R={input} O={output}"
 
 rule index_fasta:
     input: "{file}.fasta"
@@ -225,14 +212,14 @@ rule bcf_call_variants:
         ref_fai="Reference/combined_dd_ec.fasta.fai",
         ref_dict="Reference/combined_dd_ec.dict",
         regions="Reference/reference.regions",
-        #dir=ancient('analysis/combined/'),
+        dir=ancient('analysis/combined/exists'),
         bam=expand("analysis/{sample}/{part}/mapped_dedup.bam",
                     sample=config['activesamples'], part=['Stalk', 'Spore']),
         bai=expand("analysis/{sample}/{part}/mapped_dedup.bam.bai",
                     sample=config['activesamples'], part=['Stalk', 'Spore']),
     output:
         "analysis/combined/all.vcf.gz",
-    shell: """ {module}; module load bcftools
+    shell: """  module load bcftools
     bcftools mpileup \
         --fasta-ref {input.ref_fasta} \
         --targets-file {input.regions} \
@@ -262,11 +249,11 @@ rule call_variants:
         bai=path.join(analysis_dir, "{sample}", "bowtie2_dedup.bam.bai"),
     output:
         path.join(analysis_dir, "{sample}", "raw_variants_uncalibrated.p.g.vcf")
-    log:
+    benchmark:
         path.join(analysis_dir, "{sample}", "raw_variants_uncalibrated.log")
     threads: 4
     shell: """
-    {module}; module load java
+     module load java
 	gatk HaplotypeCaller \
 		-R {input.ref_fasta} \
 		-I {input.bam} \
@@ -281,7 +268,7 @@ rule call_variants:
 
 rule combine_variants:
     input:
-        #dir=ancient("analysis/combined/"),
+        dir=ancient("analysis/combined/exists"),
         ref_fasta="Reference/combined_dd_ec.fasta",
         infastas=expand("analysis/{sample}/raw_variants_uncalibrated.p.g.vcf",
                 sample=config['samples']
@@ -292,7 +279,7 @@ rule combine_variants:
     params:
         files=lambda wildcards, input: ' '.join('-V ' + i for i in input.infastas)
     shell: """
-    {module}; module load java
+     module load java
     gatk GenotypeGVCFs \
         -R {input.ref_fasta} \
         {params.files} \
@@ -323,7 +310,7 @@ rule map_gdna:
     input:
         unpack(getreads(1)),
         unpack(getreads(2)),
-        #ancient(path.join(analysis_dir, "{sample}", "{part}")+'/'),
+        ancient(path.join(analysis_dir, "{sample}", "{part}", "exists")),
         bt2_index="Reference/combined_dd_ec.1.bt2",
         fasta="Reference/combined_dd_ec.fasta",
     output:
@@ -336,7 +323,7 @@ rule map_gdna:
         r2s=getreadscomma(2),
         outdir= lambda wildcards, output: path.dirname(output[0])
     threads: 6
-    shell: """{module}; module load samtools/1.3 bowtie2
+    shell: """ module load samtools/1.3 bowtie2
     bowtie2 \
 		--very-sensitive-local \
 		-p 11 \
@@ -387,7 +374,7 @@ rule blast_contamination:
 
 rule ecoli_contamination_rate:
     input:
-        #dir=ancient('analysis/combined/'),
+        dir=ancient('analysis/combined/exists'),
         bams=expand('analysis/{sample}/{part}/mapped_dedup.bam',
                 sample=config['activesamples'], part=['Stalk', 'Spore']),
         bais=expand('analysis/{sample}/{part}/mapped_dedup.bam.bai',
@@ -405,7 +392,7 @@ rule ecoli_contamination_rate:
 rule split_flowers:
     input:
         fasta="analysis/flowers2010/flowers2010.fasta",
-        #dir=ancient("analysis/flowers2010/"),
+        dir=ancient("analysis/flowers2010/exists"),
     output:
         expand("analysis/flowers2010/{id}.fasta", id=config['flowersids'])
     run:
@@ -459,7 +446,7 @@ rule wasp_remap:
     output:
         temp("{sample}/{prefix}.remap.bam")
     threads: 16
-    shell: """{module}; module load STAR;
+    shell: """ module load STAR;
     rm -rf {wildcards.sample}/STARtmp
     {star_map} \
             --genomeDir {input.genomedir} \
@@ -492,4 +479,4 @@ rule wasp_merge:
     output:
         temp("{file}.keep.merged.bam")
     shell:
-        "{module}; module load samtools; samtools merge {output} {input}"
+        " module load samtools; samtools merge {output} {input}"

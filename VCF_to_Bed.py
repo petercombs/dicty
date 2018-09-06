@@ -1,3 +1,4 @@
+from __future__ import print_function
 import gzip as gz
 from argparse import ArgumentParser, FileType
 
