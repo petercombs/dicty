@@ -71,9 +71,7 @@ dependencies:
     - atropos==1.1.16
     - attrs==18.1.0
     - biokit==0.4.2
-    - biopython==1.72
     - bioservices==1.5.1
-    - black==18.5b0
     - cbemd==1.0
     - chardet==3.0.4
     - colorlog==3.1.2
@@ -85,21 +83,14 @@ dependencies:
     - docopt==0.6.2
     - docutils==0.14
     - easydev==0.9.36
-    - emd==0.0.0
     - future==0.16.0
     - grequests==0.3.0
     - idna==2.7
     - jsonschema==2.6.0
-    - line-profiler==2.1.2
     - lzstring==1.0.3
     - mock==2.0.0
     - multiqc==1.0
-    - networkx==2.1
     - pbr==3.1.1
-    - progressbar2==3.34.3
-    - pyemd==0.4.4
-    - pygraphviz==1.3.1
-    - pykwalify==1.6.0
     - python-utils==2.2.0
     - pyvcf==0.6.8
     - pyyaml==3.13
@@ -107,7 +98,6 @@ dependencies:
     - requests==2.19.1
     - requests-cache==0.4.13
     - ruamel.yaml==0.15.0
-    - sequana==0.6.3.post1
     - simplejson==3.13.2
     - spectra==0.0.11
     - suds-jurko==0.6
@@ -115,5 +105,4 @@ dependencies:
     - urllib3==1.23
     - wrapt==1.10.11
     - xmltodict==0.11.0
-prefix: /opt/modules/pkgs/anaconda/3.6/envs/dicty
 
