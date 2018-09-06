@@ -51,8 +51,8 @@ rule score_snps:
         code="ScoreSnps.py",
     output:
         "analysis/results/{sample}_scores.tsv"
+    conda: "envs/dicty.yaml"
     shell: """
-    source activate fraserconda
     python ScoreSnps.py {input.stalk} {input.spore} {output}
     """
 
@@ -63,10 +63,8 @@ rule snp_counts:
         variants="analysis/combined/all.snps.bed",
     output:
         "{sample}/snp_counts.tsv"
+    conda: "envs/dicty.yaml"
     shell:"""
-    export CONDA_PATH_BACKUP=""
-    export PS1=""
-    source activate fraserconda
     python CountSNPASE.py \
 {input.variants} \
 {input.bam} \
@@ -80,7 +78,8 @@ rule fisher_pvalues:
     output:
         'analysis/results/combined.Stalk.tsv',
         'analysis/results/combined.Spore.tsv',
-    shell: """ source activate fraserconda
+    conda: "envs/dicty.yaml"
+    shell: """
     export MPLBACKEND=Agg
     python CombinePvals.py --output analysis/results/combined {input.scores}
     """
@@ -412,7 +411,8 @@ rule clustalo:
         fasta="{sample}.fasta"
     output:
         "{sample}.clu"
-    shell: """source activate my_root
+    conda: "envs/dicty.yaml"
+    shell: """
     clustalo -i {input} --outfmt=clustal --outfile={output}
     """
 
@@ -463,10 +463,8 @@ rule wasp_keep:
         remapped="{file}.remap.bam",
     output:
         temp("{file}.remap.kept.bam"),
+    conda: "envs/dicty.yaml"
     shell: """
-    export CONDA_PATH_BACKUP=""
-    export PS1=""
-    source activate peter
     python ~/FWASP/mapping/filter_remapped_reads.py \
             -p \
             {input.toremap} {input.remapped} \
