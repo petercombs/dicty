@@ -62,6 +62,7 @@ rule snp_counts:
         bam="{sample}/mapped_dedup.bam",
         bai="{sample}/mapped_dedup.bam.bai",
         variants="analysis/combined/all.snps.bed",
+        code="CountSNPASE.py",
     output:
         "{sample}/snp_counts.tsv"
     conda: "envs/dicty.yaml"

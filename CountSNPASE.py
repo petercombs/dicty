@@ -39,8 +39,10 @@ if __name__ == "__main__":
         if chrom not in snps:
             continue
         chrsnps = snps[chrom]
+        seq = read.seq
 
-        for _, pos, base in read.get_aligned_pairs(matches_only=True, with_seq=True):
+        for rpos, pos, base in read.get_aligned_pairs(matches_only=True, with_seq=True):
+            base = read.seq[rpos].upper()
             ptuple = chrom, pos + 1
             if pos in chrsnps:
                 ref, alt = chrsnps[pos]
