@@ -246,8 +246,18 @@ if __name__ == "__main__":
         combined_pvals_rev.sort_values(inplace=True)
         combined_pvals_rand.sort_values(inplace=True)
 
-        combined_pvals_fwd.to_csv(args.output_prefix + ".Stalk.tsv", sep="\t")
-        combined_pvals_rev.to_csv(args.output_prefix + ".Spore.tsv", sep="\t")
+        combined_pvals_fwd.to_csv(args.output_prefix + ".Spore.tsv", sep="\t")
+        combined_pvals_rev.to_csv(args.output_prefix + ".Stalk.tsv", sep="\t")
+
+    out_table = pd.DataFrame(
+        {
+            "spore": combined_pvals_fwd,
+            "stalk": combined_pvals_rev,
+            "num_snps": any_good_snps,
+        }
+    )
+    out_table.sort_values(by="num_snps", inplace=True)
+    out_table.to_csv(args.output_prefix + "all.tsv", sep="\t")
 
     print(
         "{} SNPs with any good samples\n{} SNPs with all good samples".format(
