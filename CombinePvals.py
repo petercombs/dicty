@@ -157,7 +157,7 @@ def make_tehranchigram(all_stalk_freqs, all_spore_freqs, vmax=None):
     close()
 
 
-def plot_top_snps(dataset, name, all_fet_data, n=16):
+def plot_top_snps(dataset, name, num_snps, all_fet_data, n=16):
     """Plot stalk/spore frequencies of top SNPs
 
     Each SNP gets its own window, with one point per sample.
@@ -171,11 +171,7 @@ def plot_top_snps(dataset, name, all_fet_data, n=16):
     for i in range(n):
         snp = dataset.index[i]
         ax = subplot(n_rows, n_cols, i + 1)
-        title(
-            "{}\n{} samples - {:3.1e}".format(
-                snp, len(pvals_to_combine_fwd.loc[snp].dropna()), dataset.loc[snp]
-            )
-        )
+        title("{}\n{} samples - {:3.1e}".format(snp, num_snps[snp], dataset.loc[snp]))
         stalks = [
             all_fet_data[file].loc[snp, "stalk_ratio"]
             for file in args.scores
@@ -268,4 +264,4 @@ if __name__ == "__main__":
         ("stalk", combined_pvals_rev),
         ("random", combined_pvals_rand),
     ):
-        plot_top_snps(i_dataset, i_name, fet_data, n=args.num_subplots)
+        plot_top_snps(i_dataset, i_name, any_good_snps, fet_data, n=args.num_subplots)
