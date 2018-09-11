@@ -33,6 +33,7 @@ from matplotlib.pyplot import (
 from multiprocessing import Pool
 import matplotlib.pyplot as mpl
 from numpy.random import shuffle, rand
+from collections import defaultdict
 from tqdm import tqdm
 
 
@@ -58,9 +59,9 @@ def parse_args():
 def load_data(filenames):
     "Load SNP scores"
     # To-do: make the returns more organized.
-    pvals_to_combine_fwd = {}
-    pvals_to_combine_rev = {}
-    pvals_to_combine_rand = {}
+    pvals_to_combine_fwd = defaultdict(list)
+    pvals_to_combine_rev = defaultdict(list)
+    pvals_to_combine_rand = defaultdict(list)
 
     fet_data = {}
 
@@ -69,12 +70,12 @@ def load_data(filenames):
 
     for file in tqdm(filenames):
         fet_file = pd.read_table(file, squeeze=True, index_col=0)
-        fet_pvals = fet_file.pval.copy()
+        fet_data[file] = fet_file.sort_index()
         good_snps = isfinite(fet_file["rank"])
+        fet_file = fet_file.loc[good_snps]
         great_snps = (fet_file.iloc[:, 1:3].T.sum() > 10) & (
             fet_file.iloc[:, 3:5].T.sum() > 10
         )
-        fet_pvals[good_snps] = nan
         if "any_good_snps" not in locals():
             any_good_snps = good_snps * 0
         any_good_snps += good_snps
@@ -90,14 +91,12 @@ def load_data(filenames):
         semi_ps_rand = pd.Series(index=semi_ps.index, data=np.nan)
         semi_ps_rand[good_snps] = semi_ps_rand_to_shuffle
 
-        fet_data[file] = fet_file.sort_index()
-        pvals_to_combine_fwd[file] = semi_ps
-        pvals_to_combine_rev[file] = 1 - semi_ps + 1 / fet_file["rank"].max()
-        pvals_to_combine_rand[file] = semi_ps_rand
-
-    pvals_to_combine_fwd = pd.DataFrame(pvals_to_combine_fwd, dtype=float)
-    pvals_to_combine_rev = pd.DataFrame(pvals_to_combine_rev, dtype=float)
-    pvals_to_combine_rand = pd.DataFrame(pvals_to_combine_rand, dtype=float)
+        for ix in semi_ps.index:
+            pvals_to_combine_fwd[ix].append(semi_ps[ix])
+            pvals_to_combine_rev[ix].append(
+                1 - semi_ps[ix] + 1 / fet_file["rank"].max()
+            )
+            pvals_to_combine_rand[ix].append(semi_ps_rand[ix])
 
     return (
         pvals_to_combine_fwd,
@@ -108,6 +107,15 @@ def load_data(filenames):
         any_good_snps,
         fet_data,
     )
+
+
+def combine_all_pvals(table, indices):
+    out = pd.Series(index=table.keys(), data=nan, dtype=float)
+
+    for ix in tqdm(indices):
+        out[ix] = combine_pvalues(table[ix], "fisher")[1]
+
+    return out
 
 
 def make_qq_plot(combined_pvals_fwd, combined_pvals_rev, combined_pvals_rand):
@@ -222,36 +230,21 @@ if __name__ == "__main__":
     ) = load_data(args.scores)
 
     if not args.skip_fisher:
-        combined_pvals_fwd = pd.Series(
-            index=pvals_to_combine_fwd.index, data=nan, dtype=float
-        )
-        combined_pvals_rev = pd.Series(
-            index=pvals_to_combine_rev.index, data=nan, dtype=float
-        )
-        combined_pvals_rand = pd.Series(
-            index=pvals_to_combine_rev.index, data=nan, dtype=float
-        )
+        good_snps = any_good_snps.index[any_good_snps > 0]
+        with Pool(3) as pool:
+            combined_pvals_fwd = pool.apply_async(
+                combine_all_pvals, (pvals_to_combine_fwd, good_snps)
+            )
+            combined_pvals_rev = pool.apply_async(
+                combine_all_pvals, (pvals_to_combine_rev, good_snps)
+            )
+            combined_pvals_rand = pool.apply_async(
+                combine_all_pvals, (pvals_to_combine_rand, good_snps)
+            )
 
-        fwd_results_queue = {}
-        rev_results_queue = {}
-        rand_results_queue = {}
-        with Pool() as pool:
-            for ix in tqdm(any_good_snps.index[any_good_snps > 0]):
-                fwd_results_queue[ix] = pool.apply_async(
-                    combine_pvalues, [pvals_to_combine_fwd.loc[ix].dropna(), "fisher"]
-                )
-                rev_results_queue[ix] = pool.apply_async(
-                    combine_pvalues, [pvals_to_combine_rev.loc[ix].dropna(), "fisher"]
-                )
-                rand_results_queue[ix] = pool.apply_async(
-                    combine_pvalues, [pvals_to_combine_rand.loc[ix].dropna(), "fisher"]
-                )
-
-            for ix in tqdm(any_good_snps.index[any_good_snps > 0]):
-                # Multiply by two to correct for testing both ends
-                combined_pvals_fwd[ix] = fwd_results_queue[ix].get()[1]
-                combined_pvals_rev[ix] = rev_results_queue[ix].get()[1]
-                combined_pvals_rand[ix] = rand_results_queue[ix].get()[1]
+            combined_pvals_fwd = combined_pvals_fwd.get()
+            combined_pvals_rev = combined_pvals_rev.get()
+            combined_pvals_rand = combined_pvals_rand.get()
 
         combined_pvals_fwd.sort_values(inplace=True)
         combined_pvals_rev.sort_values(inplace=True)
