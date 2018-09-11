@@ -127,7 +127,7 @@ def make_qq_plot(combined_pvals_fwd, combined_pvals_rev, combined_pvals_rand):
     close()
 
 
-def make_tehranchigram(all_stalk_freqs, all_spore_freqs):
+def make_tehranchigram(all_stalk_freqs, all_spore_freqs, vmax=None):
     """Pre vs post plot
 
     Of course, in this case, neither one is obviously pre or post-treatment, but
@@ -136,7 +136,8 @@ def make_tehranchigram(all_stalk_freqs, all_spore_freqs):
     figure()
     x = pd.Series(all_stalk_freqs)
     y = pd.Series(all_spore_freqs)
-    vmax = np.percentile(np.reshape(np.histogram2d(x, y, bins=20)[0], -1), 98)
+    if vmax is None:
+        vmax = np.percentile(np.reshape(np.histogram2d(x, y, bins=20)[0], -1), 98)
 
     hist2d(
         x[isfinite(x) & isfinite(y)], y[isfinite(x) & isfinite(y)], vmax=vmax, bins=20
