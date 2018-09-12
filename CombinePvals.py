@@ -329,6 +329,8 @@ if __name__ == "__main__":
 
     make_tehranchigram(all_stalk_freqs, all_spore_freqs)
 
+    make_manhattan_plot(combined_pvals_fwd, combined_pvals_rev, outdir=outdir)
+
     for i_name, i_dataset in (
         ("spore", combined_pvals_fwd),
         ("stalk", combined_pvals_rev),
