@@ -78,6 +78,7 @@ rule fisher_pvalues:
         scores=expand("analysis/results/{sample}_scores.tsv", sample=config['activesamples']),
         code="CombinePvals.py"
     output:
+        'analysis/results/combined.all.tsv',
         'analysis/results/combined.Stalk.tsv',
         'analysis/results/combined.Spore.tsv',
     conda: "envs/dicty.yaml"
@@ -85,6 +86,14 @@ rule fisher_pvalues:
     export MPLBACKEND=Agg
     python CombinePvals.py --output analysis/results/combined {input.scores}
     """
+
+rule dictybase_bed:
+    input:
+        snp_data="analysis/results/combined.all.tsv",
+        chrom_names="Reference/chrom_names_notrans.txt"
+    output:
+        "analysis/results/combined.all.bed"
+    shell: "python TableToBed.py {input.chrom_names} {input.snp_data} {output}"
 
 ## Generic Rules
 rule index_bam:
