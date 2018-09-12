@@ -301,8 +301,9 @@ if __name__ == "__main__":
         }
     )
     out_table.sort_values(by="num_snps", inplace=True)
-    out_table.to_csv(args.output_prefix + "all.tsv", sep="\t")
+    out_table.to_csv(args.output_prefix + ".all.tsv", sep="\t")
 
+    all_good_snps = any_good_snps.index[any_good_snps == len(args.scores)]
     good_snps_stalk = pd.DataFrame(
         index=all_good_snps, columns=fet_data.keys(), data=np.nan
     )
@@ -310,7 +311,7 @@ if __name__ == "__main__":
         index=all_good_snps, columns=fet_data.keys(), data=np.nan
     )
     for fname, fdata in fet_data.items():
-        for snp in good_snps.index:
+        for snp in all_good_snps:
             good_snps_stalk.loc[snp, fname] = fdata.loc[snp, "stalk_ratio"]
             good_snps_spore.loc[snp, fname] = fdata.loc[snp, "spore_ratio"]
     good_snps = good_snps_spore.join(
@@ -320,7 +321,7 @@ if __name__ == "__main__":
 
     print(
         "{} SNPs with any good samples\n{} SNPs with all good samples".format(
-            (any_good_snps > 0).sum(), (any_good_snps == len(args.scores)).sum()
+            (any_good_snps > 0).sum(), len(all_good_snps)
         )
     )
 
