@@ -59,8 +59,8 @@ rule score_snps:
 
 rule snp_counts:
     input:
-        bam="{sample}/mapped_dedup.bam",
-        bai="{sample}/mapped_dedup.bam.bai",
+        bam="{sample}/mapped_hq_dedup.bam",
+        bai="{sample}/mapped_hq_dedup.bam.bai",
         variants="analysis/combined/all.snps.bed",
         code="CountSNPASE.py",
     output:
@@ -175,6 +175,10 @@ rule makedir:
 rule exists:
     output: touch('{prefix}/exists')
 
+rule sentinel_hq:
+    output: touch("analysis/sentinels/high_quality")
+
+
 # SNP calling
 
 rule bowtie2_build:
@@ -214,9 +218,9 @@ rule bcf_call_variants:
         ref_dict="Reference/combined_dd_ec.dict",
         regions="Reference/reference.regions",
         dir=ancient('analysis/combined/exists'),
-        bam=expand("analysis/{sample}/{part}/mapped_dedup.bam",
+        bam=expand("analysis/{sample}/{part}/mapped_hq_dedup.bam",
                     sample=config['activesamples'], part=['Stalk', 'Spore']),
-        bai=expand("analysis/{sample}/{part}/mapped_dedup.bam.bai",
+        bai=expand("analysis/{sample}/{part}/mapped_hq_dedup.bam.bai",
                     sample=config['activesamples'], part=['Stalk', 'Spore']),
     output:
         "analysis/combined/all.vcf.gz",
@@ -341,6 +345,17 @@ rule map_gdna:
 		| samtools sort  -T {params.outdir}/{wildcards.sample}_bowtie2_sorting \
             --output-fmt bam -o {output} -
         """
+
+rule high_quality_maps:
+    # https://www.biostars.org/p/163429/
+    input:
+        bam="{sample}.bam",
+        sentinel="analysis/sentinels/high_quality"
+    output: "{sample}_hq.bam"
+    shell:  """
+    module load samtools
+    samtools view -f2 -q30 -b {input.bam} > {output}
+    """
 
 rule middle_seqs:
     input:
