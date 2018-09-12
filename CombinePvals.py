@@ -139,6 +139,42 @@ def make_qq_plot(combined_pvals_spore, combined_pvals_stalk, combined_pvals_rand
     close()
 
 
+def make_manhattan_plot(spore_pvals, stalk_pvals, outdir="analysis/results"):
+    chrom_of = [x.split(":")[0] for x in sorted(stalk_pvals.index)]
+    chroms = sorted(set(chrom_of))
+    chroms_colors_red = {ix: ["r", "m"][i % 2] for i, ix in enumerate(chroms)}
+    chroms_colors_blue = {ix: [0, 0, 1 - .2 * (i % 2)] for i, ix in enumerate(chroms)}
+
+    plot_kwargs = {"s": 1}
+    x = arange(len(stalk_pvals))
+
+    mpl.figure()
+    mpl.scatter(
+        x,
+        -log10(spore_pvals.sort_index()),
+        label="Spore",
+        c=[chroms_colors_red[ix] for ix in chrom_of],
+        **plot_kwargs,
+    )
+    mpl.scatter(
+        x,
+        log10(stalk_pvals.sort_index()),
+        label="Stalk",
+        c=[chroms_colors_blue[ix] for ix in chrom_of],
+        **plot_kwargs,
+    )
+    mpl.hlines(
+        [log10(.05 / len(x)), -log10(.05 / len(x))],
+        0,
+        len(x),
+        "k",
+        linestyles="dashed",
+        lw=.5,
+    )
+    mpl.legend(loc="lower left", bbox_to_anchor=(0.8, 1.0))
+    mpl.savefig(path.join(outdir, "manhattan.png"), dpi=900)
+
+
 def make_tehranchigram(
     all_stalk_freqs, all_spore_freqs, vmax=None, outdir="analysis/results"
 ):
