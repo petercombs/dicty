@@ -118,24 +118,30 @@ def combine_all_pvals(table, indices):
     return out
 
 
-def make_qq_plot(combined_pvals_fwd, combined_pvals_rev, combined_pvals_rand):
+def make_qq_plot(combined_pvals_spore, combined_pvals_stalk, combined_pvals_rand):
     figure()
     scatter(
-        -log10(combined_pvals_rand), -log10(combined_pvals_fwd), label="Spore specific"
+        -log10(combined_pvals_rand),
+        -log10(combined_pvals_spore),
+        label="Spore specific",
     )
     scatter(
-        -log10(combined_pvals_rand), -log10(combined_pvals_rev), label="Stalk specific"
+        -log10(combined_pvals_rand),
+        -log10(combined_pvals_stalk),
+        label="Stalk specific",
     )
 
     plot([0, 7], [0, 7], "r:")
     xlabel("-log10 p Expected")
     ylabel("-log10 p Observed")
     legend(loc="lower right")
-    mpl.savefig(path.join(outdir, "combined_pvals_fwd_and_rev.png"))
+    mpl.savefig(path.join(outdir, "combined_pvals_spore_and_stalk.png"))
     close()
 
 
-def make_tehranchigram(all_stalk_freqs, all_spore_freqs, vmax=None):
+def make_tehranchigram(
+    all_stalk_freqs, all_spore_freqs, vmax=None, outdir="analysis/results"
+):
     """Pre vs post plot
 
     Of course, in this case, neither one is obviously pre or post-treatment, but
@@ -157,7 +163,9 @@ def make_tehranchigram(all_stalk_freqs, all_spore_freqs, vmax=None):
     close()
 
 
-def plot_top_snps(dataset, name, num_snps, all_fet_data, n=16):
+def plot_top_snps(
+    dataset, name, num_snps, all_fet_data, n=16, outdir="analysis/results"
+):
     """Plot stalk/spore frequencies of top SNPs
 
     Each SNP gets its own window, with one point per sample.
