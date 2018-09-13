@@ -1,3 +1,7 @@
+from snakemake.utils import min_version
+
+min_version("5.0")
+
 configfile: "config.yaml"
 
 localrules: makedir, all, exists
@@ -37,7 +41,8 @@ def getreadscomma(readnum):
 
 rule all:
     input:
-        'analysis/results/combined.Spore.tsv',
+        'analysis/results/combined.all.tsv',
+        'analysis/results/manhattan.png',
         expand('analysis/results/{sample}_scores.tsv',
                 sample=config['activesamples']
         )
@@ -81,6 +86,7 @@ rule fisher_pvalues:
         'analysis/results/combined.all.tsv',
         'analysis/results/combined.Stalk.tsv',
         'analysis/results/combined.Spore.tsv',
+        'analysis/results/manhattan.png',
     conda: "envs/dicty.yaml"
     shell: """
     export MPLBACKEND=Agg
