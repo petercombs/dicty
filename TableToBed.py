@@ -13,14 +13,7 @@ if __name__ == "__main__":
 
     snps_by_chrom = {chrom: {} for chrom in chroms_conv.values()}
 
-    bedline = "\t".join(
-        [
-            "{chrom}",
-            "{pos0}",
-            "{pos1}",
-            "{score}",
-        ]
-    )
+    bedline = "\t".join(["{chrom}", "{pos0}", "{pos1}", "{score}"])
     header = next(args.in_table)
     for line in args.in_table:
         data = line.split("\t")
@@ -45,7 +38,7 @@ if __name__ == "__main__":
             if stalk_pval > args.min_pval:
                 continue
             rgb = "{},0,0".format(255 + 10 * log10(stalk_pval))
-            score=log10(stalk_pval)
+            score = log10(stalk_pval)
 
         snps_by_chrom[chrom][pos0] = bedline.format(**locals())
 
