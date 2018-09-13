@@ -15,7 +15,9 @@ named, but ymmv...
 
 From there, it should be straightforward to simply use `snakemake` in the simplest possible way, i.e.:
  
-   snakemake all
+```
+snakemake --use-conda all
+```
 
 which should generate the appropriate output files in `analysis/results`. This
 is a relatively wide job tree (with a couple narrow chokepoints), so giving
