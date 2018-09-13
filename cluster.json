@@ -31,7 +31,7 @@
         {
                 "time": "1-00:00:00",
                 "cpus": 4,
-                "memory": "32G"
+                "memory": "15G"
 
         },
         "star_map" :

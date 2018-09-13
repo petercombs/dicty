@@ -154,6 +154,7 @@ rule ecoli_remapped:
     shell: """ module load samtools/1.3 bowtie2
     bowtie2 \
 		--very-sensitive-local \
+        --mm \
 		-p 11 \
 		--rg-id {wildcards.sample} \
 		--rg "SM:{wildcards.sample}" \
@@ -210,7 +211,7 @@ rule fadict:
 rule index_fasta:
     input: "{file}.fasta"
     output: "{file}.fasta.fai"
-    shell: "samtools faidx {input}"
+    shell: "module load samtools; samtools faidx {input}"
 
 rule make_regions:
     input: "{file}.fasta.fai",
