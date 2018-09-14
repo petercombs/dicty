@@ -87,7 +87,7 @@ if __name__ == "__main__":
 
     out.index.name = "snp_id"
     out = out.sort_values(by="pval")
-    out["rank"] = pd.np.nan
+    out["rank"] = -1
     i = 0
     for ix, row in out.iterrows():
         if (

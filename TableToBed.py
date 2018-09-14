@@ -1,3 +1,11 @@
+""" TableToBed
+
+Utility function to convert a summary table of SNP p-values into a BEDgraph file
+that has all the significant scores that pass an (command line optional)
+p-value. This is useful for visualizing the results in a genome browser.
+
+"""
+
 from argparse import ArgumentParser, FileType
 from math import log10
 
