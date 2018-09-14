@@ -2,3 +2,5 @@ language: python
 python: 
     - '3.5'
 
+script: 
+    - python -m py_compile CombinePvals.py CountSNPASE.py GATKTableToBed.py TableToBed.py VCF_to_Bed.py
