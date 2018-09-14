@@ -8,11 +8,13 @@ drawn from a uniform distribution.
 
 
 """
+from os import path
+from argparse import ArgumentParser
+from multiprocessing import Pool
+from collections import defaultdict
 import pandas as pd
 import numpy as np
-from os import path
 from numpy import arange, log10, nan, ceil, sqrt, isfinite
-from argparse import ArgumentParser
 from scipy.stats import combine_pvalues
 from matplotlib.pyplot import (
     xlim,
@@ -30,10 +32,8 @@ from matplotlib.pyplot import (
     title,
     hist2d,
 )
-from multiprocessing import Pool
 import matplotlib.pyplot as mpl
 from numpy.random import shuffle, rand
-from collections import defaultdict
 from tqdm import tqdm
 
 
