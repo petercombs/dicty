@@ -71,7 +71,7 @@ def load_data(filenames):
     for file in tqdm(filenames):
         fet_file = pd.read_table(file, squeeze=True, index_col=0)
         fet_data[file] = fet_file.sort_index()
-        good_snps = isfinite(fet_file["rank"])
+        good_snps = isfinite(fet_file["rank"]) & (fet_file["rank"] >= 0)
         fet_file = fet_file.loc[good_snps]
         great_snps = (fet_file.iloc[:, 1:3].T.sum() > 10) & (
             fet_file.iloc[:, 3:5].T.sum() > 10
