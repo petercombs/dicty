@@ -139,14 +139,34 @@ def make_qq_plot(combined_pvals_spore, combined_pvals_stalk, combined_pvals_rand
     close()
 
 
-def make_manhattan_plot(spore_pvals, stalk_pvals, outdir="analysis/results"):
+startswith = lambda y: lambda x: x.startswith(y)
+
+
+def make_manhattan_plot(
+    spore_pvals,
+    stalk_pvals,
+    outdir="analysis/results",
+    translation="Reference/chrom_names.txt",
+):
+    translator = {}
+    if path.exists(translation):
+        for line in open(translation):
+            line = line.strip().split()
+            translator[line[0]] = line[1]
     chrom_of = [x.split(":")[0] for x in sorted(stalk_pvals.index)]
     chroms = sorted(set(chrom_of))
-    chroms_colors_red = {ix: ["r", "m"][i % 2] for i, ix in enumerate(chroms)}
-    chroms_colors_blue = {ix: [0, 0, 1 - .2 * (i % 2)] for i, ix in enumerate(chroms)}
+    reds = ["red", "darkred", "pink"]
+    blues = ["blue", "darkblue", "lightblue"]
+    chroms_colors_red = {ix: reds[i % len(reds)] for i, ix in enumerate(chroms)}
+    chroms_colors_blue = {ix: blues[i % len(blues)] for i, ix in enumerate(chroms)}
 
     plot_kwargs = {"s": 1}
     x = arange(len(stalk_pvals))
+
+    chrom_midpoints = {
+        x[[(i == chrom) for i in chrom_of]].mean(): translator.get(chrom, chrom)
+        for chrom in chroms
+    }
 
     mpl.figure()
     mpl.scatter(
@@ -171,7 +191,12 @@ def make_manhattan_plot(spore_pvals, stalk_pvals, outdir="analysis/results"):
         linestyles="dashed",
         lw=.5,
     )
+    ticks = yticks()[0]
+    yticks(ticks, np.abs(ticks))
+    xticks(*zip(*chrom_midpoints.items()), rotation=90)
+    ylabel("-log10 p")
     mpl.legend(loc="lower left", bbox_to_anchor=(0.8, 1.0))
+    mpl.tight_layout()
     mpl.savefig(path.join(outdir, "manhattan.png"), dpi=900)
 
 
