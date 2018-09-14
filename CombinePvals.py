@@ -200,19 +200,24 @@ def make_tehranchigram(
 
 
 def plot_top_snps(
-    dataset, name, num_snps, all_fet_data, n=16, outdir="analysis/results"
+    dataset,
+    name,
+    num_snps,
+    all_fet_data,
+    num_snps_to_plot=16,
+    outdir="analysis/results",
 ):
     """Plot stalk/spore frequencies of top SNPs
 
     Each SNP gets its own window, with one point per sample.
     """
-    n_rows = int(ceil(sqrt(n)))
-    n_cols = n // n_rows
-    assert n_rows * n_cols >= n
+    n_rows = int(ceil(sqrt(num_snps_to_plot)))
+    n_cols = num_snps_to_plot // n_rows
+    assert n_rows * n_cols >= num_snps_to_plot
 
     figure(figsize=(16, 12))
 
-    for i in range(n):
+    for i in range(num_snps_to_plot):
         snp = dataset.index[i]
         ax = subplot(n_rows, n_cols, i + 1)
         title("{}\n{} samples - {:3.1e}".format(snp, num_snps[snp], dataset.loc[snp]))
@@ -336,4 +341,10 @@ if __name__ == "__main__":
         ("stalk", combined_pvals_rev),
         ("random", combined_pvals_rand),
     ):
-        plot_top_snps(i_dataset, i_name, any_good_snps, fet_data, n=args.num_subplots)
+        plot_top_snps(
+            i_dataset,
+            i_name,
+            any_good_snps,
+            fet_data,
+            num_snps_to_plot=args.num_subplots,
+        )
