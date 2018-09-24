@@ -10,3 +10,4 @@ tmp/
 KmerBasesToNumber
 fakehawk*
 __pycache__
+test*
