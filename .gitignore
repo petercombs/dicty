@@ -9,3 +9,5 @@ tmp/
 *.swp
 fakehawk*
 KmerBasesToNumber
+test*
+__pycache__
