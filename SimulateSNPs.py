@@ -18,6 +18,31 @@ NUM_SNPS = int(1e3)
 AVERAGE_MAF = 0.02
 
 
+def find_vertices(D, r, values, affine=True):
+    """ Decompose D = T A (elements of T are 0 or 1)
+    An attempt to translate code from
+    'Matrix factorization with Binary Components', by Martin Slawski, Matthias
+    Hein and Pavlo Lutsik.
+    """
+
+    P = D - D.mean(axis=0)
+
+    m, n = D.shape
+
+    cardv = len(values)
+    myeps = 1e-10
+
+    if affine:
+        meanD = D.mean(axis=1)
+        E = D - meanD
+        k = r - 1
+    else:
+        meanD = np.zeros(n)
+        E = D.copy()
+        k = r
+    u, s, _ = np.linalg.svd(P, full_matrices=False)
+
+
 if __name__ == "__main__":
     strain_genotypes = np.zeros((NUM_STRAINS, NUM_SNPS))
     sample_abundances = pd.DataFrame(
