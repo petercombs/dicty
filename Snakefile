@@ -9,6 +9,7 @@ analysis_dir = 'analysis'
 # External programs
 gzip = 'pigz'
 module = 'module () { eval `$LMOD_CMD bash "$@"` }'
+module = ''
 star = '''STAR \
 --outSAMattributes MD NH --clip5pNbases 6 --outSAMtype BAM Unsorted \
 --readFilesCommand zcat --limitBAMsortRAM 20000000000 '''
@@ -396,6 +397,15 @@ rule wasp_merge:
 
 hawkdir = '$HOME/bin/hawk/bin'
 
+rule get_sra:
+    output:
+        R1="earle/{sample}_1.fastq.gz",
+        R2="earle/{sample}_2.fastq.gz",
+    shell:"""
+    {module}
+    module load sra-tools
+    fastq-dump --outdir earle --split-files --gzip {wildcards.sample}
+    """
 
 rule jellyfish_count:
     input:
@@ -466,6 +476,19 @@ rule hawk_sorted_files:
         with open(output[0], 'w') as outf:
             for i in input:
                 print(path.basename(i), end='\n', file=outf)
+
+
+rule earle_hawk_sorted_files:
+    output: "earle/sorted_files.txt"
+    input: 
+        expand("earle/{sample}_kmers_renamed.txt", sample=config['earle_amp_0']),
+        expand("earle/{sample}_kmers_renamed.txt", sample=config['earle_amp_1']),
+    run:
+        from os import path
+        with open(output[0], 'w') as outf:
+            for i in input:
+                print(path.basename(i), end='\n', file=outf)
+
 
 rule hawk_preprocess:
     input:
