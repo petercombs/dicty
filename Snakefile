@@ -321,7 +321,8 @@ rule clustalo:
         fasta="{sample}.fasta"
     output:
         "{sample}.clu"
-    shell: """source activate my_root
+    conda: "envs/dicty.yaml"
+    shell: """
     clustalo -i {input} --outfmt=clustal --outfile={output}
     """
 
@@ -372,10 +373,10 @@ rule wasp_keep:
         remapped="{file}.remap.bam",
     output:
         temp("{file}.remap.kept.bam"),
+    conda: "envs/dicty.yaml"
     shell: """
     export CONDA_PATH_BACKUP=""
     export PS1=""
-    source activate peter
     python ~/FWASP/mapping/filter_remapped_reads.py \
             -p \
             {input.toremap} {input.remapped} \
@@ -456,6 +457,13 @@ rule rename_kmers:
     output: "{sample}_renamed.txt"
     shell: "./KmerBasesToNumber < {input} > {output}"
 
+rule earle_total_kmer_counts:
+    output: "earle/total_kmer_counts.txt"
+    input: expand("earle/{sample}.kmers.hist.csv", sample=sorted(config['earle_amp_0']+config['earle_amp_1']))
+    shell:"""
+    for i in {input}; do awk -f {hawkdir}/countTotalKmer.awk $i >> {output}; done
+    """
+
 rule total_kmer_counts:
     output:
         "{dir}/total_kmer_counts.txt"
@@ -465,6 +473,8 @@ rule total_kmer_counts:
     shell:"""
     for i in {input}; do awk -f {hawkdir}/countTotalKmer.awk $i >> {output}; done
     """
+
+ruleorder: earle_total_kmer_counts > total_kmer_counts
 
 rule hawk_sorted_files:
     output: "{dir}/sorted_files.txt"
@@ -489,6 +499,16 @@ rule earle_hawk_sorted_files:
             for i in input:
                 print(path.basename(i), end='\n', file=outf)
 
+rule earle_case_control:
+    output: 
+        "earle/case_sorted_files.txt",
+        "earle/control_sorted_files.txt",
+    run:
+        with open(output[0], 'w') as outf:
+            print(*config['earle_amp_0'], sep='\n', file=outf)
+        with open(output[1], 'w') as outf:
+            print(*config['earle_amp_1'], sep='\n', file=outf)
+
 
 rule hawk_preprocess:
     input:
@@ -503,6 +523,8 @@ rule hawk_preprocess:
     cd {wildcards.dir}
     {hawkdir}/preProcess
     """
+
+ruleorder: hawk_preprocess > jellyfish_count
 
 rule hawk_main:
     input:
