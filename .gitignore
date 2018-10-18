@@ -1,6 +1,6 @@
-analysis/
+analysis
 Reference/
-sequence/
+sequence
 tmp/
 *.log
 *.log.e
@@ -12,3 +12,5 @@ KmerBasesToNumber
 test*
 __pycache__
 earle
+*temp*
+.ipynb_checkpoints/
