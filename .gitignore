@@ -12,3 +12,5 @@ fakehawk*
 __pycache__
 test/
 test2/
+.ipynb_checkpoints
+*temp*
