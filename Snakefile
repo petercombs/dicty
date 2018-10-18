@@ -524,10 +524,10 @@ rule hawk_preprocess:
     {hawkdir}/preProcess
     """
 
-ruleorder: hawk_preprocess > jellyfish_count
 
 rule hawk_main:
     input:
+        "/home/pcombs/bin/hawk/bin/hawk",
         "{dir}/case_total_kmers.txt",
         "{dir}/control_total_kmers.txt",
         "{dir}/case_sorted_files.txt",
@@ -548,9 +548,36 @@ rule hawk_main:
         cd {wildcards.dir}
         caseCount=$(cat case_sorted_files.txt | wc -l);
         controlCount=$(cat control_sorted_files.txt | wc -l);
+        echo "CaseCount: " ${{caseCount}} "ControlCount: " ${{controlCount}}
         {hawkdir}/hawk $caseCount $controlCount
         """
 
+ruleorder: hawk_preprocess > hawk_main > jellyfish_count
+
+rule sort_kmers:
+    input: "{prefix}.kmerDiff"
+    output: "{prefix}_sorted.kmerDiff"
+    shell: "sort -g -k 4 -t $'\t' {input} > {output}"
+
+rule hawk_top_kmers:
+    input: "{prefix}_sorted.kmerDiff"
+    output: "{prefix}_top.kmerDiff"
+    shell: "head -200000 {input} > {output}"
+
+
+rule hawk_log_reg:
+    input:
+        "{dir}/{case}_out_w_bonf_top.kmerDiff",
+        "{dir}/pcs.evec",
+        "{dir}/gwas_eigenstratX.ind",
+        "{dir}/total_kmer_counts.txt",
+        #"{dir}/covariates.txt",
+        "{dir}/total_kmers.txt",
+    output:
+        "{dir}/pvals_{case}_top.txt"
+    conda: "envs/dicty.yaml"
+    shell: """cd {wildcards.dir}
+    Rscript {hawkdir}/log_reg_{wildcards.case}.R"""
 
 rule hawk_eigenstrats:
     input:
@@ -573,8 +600,8 @@ rule hawk_smartpca:
     output:
         "{dir}/log_eigen.txt",
         "{dir}/pcs.evec",
-        "{dir}/case_out_w_bonf_sorted.kmerDiff",
-        "{dir}/control_out_w_bonf_sorted.kmerDiff",
+        #"{dir}/case_out_w_bonf.kmerDiff",
+        #"{dir}/control_out_w_bonf.kmerDiff",
     shell: """
     cd {wildcards.dir}
     noInd=$(cat sorted_files.txt | wc -l);
@@ -582,12 +609,6 @@ rule hawk_smartpca:
     {hawkdir}/evec2pca.perl 10 gwas_eigenstrat.evec gwas_eigenstratX.ind gwas_eigenstrat.pca
 
     tail -${{noInd}} gwas_eigenstrat.pca > pcs.evec
-
-    sort -g  -k 4 -t $'\t' case_out_w_bonf.kmerDiff > case_out_w_bonf_sorted.kmerDiff
-    head -200000 case_out_w_bonf_sorted.kmerDiff > case_out_w_bonf_top.kmerDiff
-
-    sort -g  -k 4 -t $'\t' control_out_w_bonf.kmerDiff > control_out_w_bonf_sorted.kmerDiff
-    head -200000 control_out_w_bonf_sorted.kmerDiff > control_out_w_bonf_top.kmerDiff
     """
 
 rule hawk_sig_fasta:
