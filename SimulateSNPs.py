@@ -10,12 +10,14 @@ import numpy as np
 import pandas as pd
 from numpy import random
 from sklearn.decomposition import PCA, NMF
+from os import path
 
 
-NUM_STRAINS = 63
+NUM_STRAINS = 10
 NUM_SAMPLES = 96
 NUM_SNPS = int(1e3)
 AVERAGE_MAF = 0.02
+OUTDIR = "test2"
 
 
 def find_vertices(D, r, values, affine=True):
@@ -64,9 +66,11 @@ if __name__ == "__main__":
         strain_abundances.loc[i, :] = sa
         sample_abundances.loc[i, :] = sa.dot(strain_genotypes)
 
-    pd.DataFrame(strain_genotypes).T.to_csv("test2/strain_genotypes.tsv", sep="\t")
-    sample_abundances.T.to_csv("test2/sample_abundances.tsv", sep="\t")
-    strain_abundances.to_csv("test2/strain_abundances.tsv", sep="\t")
+    pd.DataFrame(strain_genotypes).T.to_csv(
+        path.join(OUTDIR, "strain_genotypes.tsv"), sep="\t"
+    )
+    sample_abundances.T.to_csv(path.join(OUTDIR, "sample_abundances.tsv"), sep="\t")
+    strain_abundances.to_csv(path.join(OUTDIR, "strain_abundances.tsv"), sep="\t")
 
     a = PCA()
     a.fit(sample_abundances)
