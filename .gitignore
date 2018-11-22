@@ -13,5 +13,6 @@ __pycache__
 earle/
 test/
 test2/
+test_*
 *temp*
 .ipynb_checkpoints/

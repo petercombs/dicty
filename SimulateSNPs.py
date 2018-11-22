@@ -10,7 +10,7 @@ import numpy as np
 import pandas as pd
 from numpy import random
 from sklearn.decomposition import PCA, NMF
-from os import path
+from os import path, makedirs
 from argparse import ArgumentParser
 
 
@@ -48,26 +48,30 @@ def find_vertices(D, r, values, affine=True):
 
 def parse_arguments():
     parser = ArgumentParser()
-    parser.add_argument("--num_strains", "-n", nargs="+", default=[64], type=int)
+    parser.add_argument("--num-strains", "-n", nargs="+", default=[64], type=int)
+    parser.add_argument("--num-samples", "-m", default=NUM_SAMPLES, type=int)
+    parser.add_argument("--num-snps", "-r", default=NUM_SNPS, type=int)
+    parser.add_argument("--outdir", "-o", default=OUTDIR)
     return parser.parse_args()
 
 
 if __name__ == "__main__":
     args = parse_arguments()
+    makedirs(args.outdir, exist_ok=True)
     for NUM_STRAINS in args.num_strains:
-        strain_genotypes = np.zeros((NUM_STRAINS, NUM_SNPS))
+        strain_genotypes = np.zeros((NUM_STRAINS, args.num_snps))
         sample_abundances = pd.DataFrame(
-            index=range(NUM_SAMPLES), columns=range(NUM_SNPS), data=0.0
+            index=range(args.num_samples), columns=range(args.num_snps), data=0.0
         )
         strain_abundances = pd.DataFrame(
-            index=range(NUM_SAMPLES), columns=range(NUM_STRAINS), data=0.0
+            index=range(args.num_samples), columns=range(NUM_STRAINS), data=0.0
         )
-        for j in range(NUM_SNPS):
-            num_alt = random.randint(1, np.ceil(2 * NUM_SAMPLES * AVERAGE_MAF) + 1)
+        for j in range(args.num_snps):
+            num_alt = random.randint(1, np.ceil(2 * args.num_samples * AVERAGE_MAF) + 1)
             for i in range(num_alt):
                 strain_genotypes[random.randint(0, NUM_STRAINS), j] = 1
 
-        for i in range(NUM_SAMPLES):
+        for i in range(args.num_samples):
             sa = 2 + .3 * random.randn(NUM_STRAINS)
             if sa.min() < 0:
                 sa -= 2 * sa.min()
@@ -76,13 +80,16 @@ if __name__ == "__main__":
             sample_abundances.loc[i, :] = sa.dot(strain_genotypes)
 
         pd.DataFrame(strain_genotypes).T.to_csv(
-            path.join(OUTDIR, "strain_genotypes_{}.tsv".format(NUM_STRAINS)), sep="\t"
+            path.join(args.outdir, "strain_genotypes_{}.tsv".format(NUM_STRAINS)),
+            sep="\t",
         )
         sample_abundances.T.to_csv(
-            path.join(OUTDIR, "sample_abundances_{}.tsv".format(NUM_STRAINS)), sep="\t"
+            path.join(args.outdir, "sample_abundances_{}.tsv".format(NUM_STRAINS)),
+            sep="\t",
         )
         strain_abundances.to_csv(
-            path.join(OUTDIR, "strain_abundances_{}.tsv".format(NUM_STRAINS)), sep="\t"
+            path.join(args.outdir, "strain_abundances_{}.tsv".format(NUM_STRAINS)),
+            sep="\t",
         )
 
         a = PCA()
