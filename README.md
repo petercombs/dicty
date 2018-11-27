@@ -3,6 +3,7 @@ Dictyostelium pooled processing
 ----
 
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/ambv/black)
+[![Build Status](https://travis-ci.com/petercombs/dicty.svg?branch=master)](https://travis-ci.com/petercombs/dicty)
 
 Software for processing data related to pooled Dicty strains.  As of 7/12/18,
 we're looking for SNPs that are related to cheating/altruism by pooling dozens
