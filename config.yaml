@@ -89,16 +89,161 @@ samples:
     P48-PF-F8-Spore:
         i5: S506
         i7: N707
+    P63-amp1-F02-Spore:
+        i5: S508
+        i7: N715
+    P63-amp1-F02-Stalk:
+        i5: S507
+        i7: N707
+    P63-amp1-F04-Spore:
+        i5: S507
+        i7: N715
+    P63-amp1-F04-Stalk:
+        i5: S507
+        i7: N712
+    P63-amp1-F06-Spore:
+        i5: S510
+        i7: N710
+    P63-amp1-F06-Stalk:
+        i5: S505
+        i7: N707
+    P63-carb1-F07-Spore:
+        i5: S502
+        i7: N715
+    P63-carb1-F07-Stalk:
+        i5: S505
+        i7: N710
+    P63-carb1-F08-Spore:
+        i5: S503
+        i7: N711
+    P63-carb1-F08-Stalk:
+        i5: S503
+        i7: N710
+    P63-carb1-F09-Spore:
+        i5: S511
+        i7: N715
+    P63-carb1-F09-Stalk:
+        i5: S502
+        i7: N710
+    P63-carb1-F12-Spore:
+        i5: S508
+        i7: N710
+    P63-carb1-F12-Stalk:
+        i5: S511
+        i7: N707
+    P63-amp2-F16-Spore:
+        i5: S505
+        i7: N715
+    P63-amp2-F16-Stalk:
+        i5: S508
+        i7: N711
+    P63-amp2-F17-Spore:
+        i5: S508
+        i7: N712
+    P63-amp2-F17-Stalk:
+        i5: S503
+        i7: N707
+    P63-amp2-F19-Spore:
+        i5: S511
+        i7: N710
+    P63-amp2-F19-Stalk:
+        i5: S506
+        i7: N711
+    P63-amp3-F24-Spore:
+        i5: S511
+        i7: N712
+    P63-amp3-F24-Stalk:
+        i5: S502
+        i7: N711
+    P63-amp3-F25-Spore:
+        i5: S507
+        i7: N714
+    P63-amp3-F25-Stalk:
+        i5: S511
+        i7: N711
+    P63-carb1-F-Spore:
+        i5: S503
+        i7: N712
+    P63-F-Stalk:
+        i5: S506
+        i7: N715
+    P63-amp2-F29-Spore:
+        i5: S510
+        i7: N712
+    P63-amp2-F29-Stalk:
+        i5: S505
+        i7: N711
+    P63-amp2-F31-Spore:
+        i5: S503
+        i7: N715
+    P63-amp2-F31-Stalk:
+        i5: S508
+        i7: N714
+    P63-amp2-F33-Spore:
+        i5: S505
+        i7: N712
+    P63-amp2-F33-Stalk:
+        i5: S510
+        i7: N714
+    P63-amp4-F38-Spore:
+        i5: S503
+        i7: N714
+    P63-amp4-F38-Stalk:
+        i5: S505
+        i7: N714
+    P63-amp4-F39-Spore:
+        i5: S502
+        i7: N712
+    P63-amp4-F39-Stalk:
+        i5: S507
+        i7: N710
+    P63-amp5-F42-Spore:
+        i5: S511
+        i7: N714
+    P63-amp5-F42-Stalk:
+        i5: S506
+        i7: N710
+    P63-amp5-F45-Spore:
+        i5: S506
+        i7: N712
+    P63-amp5-F45-Stalk:
+        i5: S502
+        i7: N707
+    P63-amp2-F14-Spore:
+        i5: S506
+        i7: N707
+    P63-amp2-F14-Stalk:
+        i5: S510
+        i7: N711
+    P63-amp4-F33-Spore:
+        i5: S510
+        i7: N707
+    P63-amp4-F33-Stalk:
+        i5: S506
+        i7: N714
+    P63-carb1-F11-Spore:
+        i5: S508
+        i7: N707
+    P63-carb1-F11-Stalk:
+        i5: S510
+        i7: N715
+    P63-amp5-F43-Spore:
+        i5: S502
+        i7: N714
+    P63-amp5-F43-Stalk:
+        i5: S507
+        i7: N711
+
 
 activesamples: [
-    P48-PB-F1,
-    P48-PB-F2,
-    P48-PC-F3,
-    P48-PC-F4,
-    P48-PD-F5,
-    P48-PD-F6,
-    P48-PF-F7,
-    P48-PF-F8
+    #    P48-PB-F1,
+    #    P48-PB-F2,
+    #    P48-PC-F3,
+    #    P48-PC-F4,
+    #    P48-PD-F5,
+    #    P48-PD-F6,
+    #    P48-PF-F7,
+    #    P48-PF-F8
     ]
 
 
