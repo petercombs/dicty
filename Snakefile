@@ -1,4 +1,5 @@
 from snakemake.utils import min_version
+from glob import glob
 
 min_version("5.0")
 
@@ -18,18 +19,43 @@ star = '''STAR \
 --outSAMattributes MD NH --clip5pNbases 6 --outSAMtype BAM Unsorted \
 --readFilesCommand zcat --limitBAMsortRAM 20000000000 '''
 
+fname_formats = [
+    '*/{sample}-{part}-{i5}-{i7}-S*-L{Lane}-R{readnum}-*.fastq.gz',
+    '*/{sample}-{part}-{i5Seq}-{i7Seq}-S*-L{Lane}-R{readnum}-*.fastq',
+    '*/{sample}-{part}-{i7}-{i5}-S*-L{Lane}-R{readnum}-*.fastq.gz',
+    '*/{sample}-{part}-{i7Seq}-{i7Seq}-S*-L{Lane}-R{readnum}-*.fastq',
+    '*/*{i5Seq}-{i7Seq}_S*_L{Lane}_R{readnum}_*.fastq.gz',
+    '*/*{i7Seq}-{i5Seq}_S*_L{Lane}_R{readnum}_*.fastq.gz',
+    #'{sample}-{part}-R{readnum}.fastq.gz',
+]
 
 def getreads(readnum):
     def retfun(wildcards):
+        R = "R{}s".format(readnum)
         if wildcards.sample in config['samples']:
-            return config['samples'][wildcards.sample]["R{}s".format(readnum)]
-        elif '-'.join([wildcards.sample, wildcards.part]) in config['samples']:
-            singlefile = path.join('sequence', '{}-{}-R{}.fastq.gz'.format(
-                        wildcards.sample, wildcards.part, readnum
-            ))
-            if path.exists(singlefile):
-                return [singlefile]
-            return config['samples']['-'.join([wildcards.sample, wildcards.part])]["R{}s".format(readnum)]
+            return config['samples'][wildcards.sample][R]
+        full_sample = '-'.join([wildcards.sample, wildcards.part])
+        if full_sample in config['samples']:
+            data = config['samples'][full_sample]
+            if R in data:
+                return data[R]
+            retfiles = set()
+            for fname_format in fname_formats:
+                try:
+                    globstr = path.join('sequence', fname_format.format(
+                                sample=wildcards.sample,
+                                part=wildcards.part,
+                                readnum=readnum,
+                                i7Seq=config['indexes'][data['i7']],
+                                i5Seq=config['indexes'][data['i5']],
+                                **data,
+                ))
+                    #print(globstr)
+                    retfiles.update(glob(globstr))
+                except KeyError:
+                    continue
+
+            return sorted(retfiles)
 
     return retfun
 

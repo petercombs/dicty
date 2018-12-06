@@ -37,58 +37,67 @@ samples:
     P48-PB-F1-Stalk:
         i5: S502
         i7: N701
-        Lane: 006
+        Lane: "006"
     P48-PB-F1-Spore:
         i5: S502
         i7: N702
-        Lane: 006
+        Lane: "006"
     P48-PB-F2-Stalk:
         i5: S502
         i7: N703
-        Lane: 006
+        Lane: "006"
     P48-PB-F2-Spore:
         i5: S502
         i7: N704
-        Lane: 006
+        Lane: "006"
     P48-PC-F3-Stalk:
         i5: S503
         i7: N705
-        Lane: 006
+        Lane: "006"
     P48-PC-F3-Spore:
         i5: S503
         i7: N706
-        Lane: 006
+        Lane: "006"
     P48-PC-F4-Stalk:
         i5: S503
         i7: N707
-        Lane: 006
+        Lane: "006"
     P48-PC-F4-Spore:
         i5: S503
         i7: N710
+        Lane: "006"
     P48-PD-F5-Stalk:
         i5: S505
         i7: N702
+        Lane: "006"
     P48-PD-F5-Spore:
         i5: S505
         i7: N701
+        Lane: "006"
     P48-PD-F6-Stalk:
         i5: S505
         i7: N704
+        Lane: "006"
     P48-PD-F6-Spore:
         i5: S505
         i7: N703
+        Lane: "006"
     P48-PF-F7-Stalk:
         i5: S506
         i7: N706
+        Lane: "006"
     P48-PF-F7-Spore:
         i5: S506
         i7: N705
+        Lane: "006"
     P48-PF-F8-Stalk:
         i5: S506
         i7: N710
+        Lane: "006"
     P48-PF-F8-Spore:
         i5: S506
         i7: N707
+        Lane: "006"
     P63-amp1-F02-Spore:
         i5: S508
         i7: N715
@@ -252,6 +261,12 @@ indexes:
     S503: AGAGGATA
     S505: CTCCTTAC
     S506: TATGCAGT
+    S507: TACTCCTT
+    S508: AGGCTTAG
+    S510: ATTAGACG
+    S511: CGGAGAGA
+    S513: CTAGTCGA
+    S515: AGCTAGAA
     N701: CGTACTAG
     N702: TAAGGCGA
     N703: TCCTGAGC
@@ -260,6 +275,12 @@ indexes:
     N706: GGACTCCT
     N707: CGAGGCTG
     N710: CTCTCTAC
+    N711: AAGAGGCA
+    N712: GTAGAGGA
+    N714: GCTCATGA
+    N715: ATCTCAGG
+    N716: ACTCGCTA
+
  
 
 flowersids: [01_109209, 01_1169436, 01_1470098, 01_1482177, 01_1512878,
