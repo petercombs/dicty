@@ -378,9 +378,8 @@ rule map_gdna:
 		--rg-id {wildcards.sample} \
 		--rg "SM:{wildcards.sample}" \
 		--rg "PL:illumina" \
-		--rg "LB:lib1"\
+		--rg "LB:{wildcards.sample}_{wildcards.part}"\
 		--rg "PU:unit1" \
-		--no-unal \
 		-x {params.index} \
 		-1 {params.r1s} \
 		-2 {params.r2s} \
@@ -397,7 +396,7 @@ rule high_quality_maps:
     output: "{sample}_hq.bam"
     shell:  """
     module load samtools
-    samtools view -f2 -q30 -b {input.bam} > {output}
+    samtools view -f2 -F 260 -q30 -b {input.bam} > {output}
     """
 
 rule all_middle_seqs:
