@@ -34,6 +34,7 @@ def read_snpcounts(fname):
 
 
 def parse_args():
+    "Parse command line arguments"
     parser = ArgumentParser()
     parser.add_argument("stalk_count")
     parser.add_argument("spore_count")

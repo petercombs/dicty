@@ -5,9 +5,8 @@ use a pseudo p-value, which just takes the rank in the list (normalized by the
 number of SNPs) and treats that as a p-value.  This automatically fulfills
 assumptions of Fisher's method, which assumes only that the p-values input are
 drawn from a uniform distribution.
-
-
 """
+
 from os import path
 from argparse import ArgumentParser
 from multiprocessing import Pool
