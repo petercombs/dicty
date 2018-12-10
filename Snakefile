@@ -71,7 +71,8 @@ rule all:
         'analysis/results/manhattan.png',
         expand('analysis/results/{sample}_scores.tsv',
                 sample=config['activesamples']
-        )
+        ),
+        'analysis/results/blastsummary.tsv',
 
 ## Pooled Pipeline specific
 
@@ -399,6 +400,12 @@ rule high_quality_maps:
     samtools view -f2 -q30 -b {input.bam} > {output}
     """
 
+rule all_middle_seqs:
+    input:
+        expand("analysis/{sample}/{part}/middle_{{n}}.fasta", sample=config['activesamples'], part=['Stalk', 'Spore'])
+    output:
+        touch("analysis/sentinels/all_middle_{n}")
+
 rule middle_seqs:
     input:
         getreads(1)
@@ -407,17 +414,18 @@ rule middle_seqs:
     params:
         n = lambda wildcards: int(wildcards.n) * 2
     shell: """
-        zcat {input} \
-        | awk 'NR % 4 == 2 && NR > 40 * {wildcards.n} {{ printf ">%s \\n%s \\n", NR, $1 }}' \
-        | head -n {params.n} \
-        > {output}
+         awk 'NR % 4 == 2 && NR > 40 * {wildcards.n} && NR <= 44 * {wildcards.n} {{ printf ">%s \\n%s \\n", NR, $1 }}; NR > 44 * {wildcards.n} {{exit 0}}' \
+             < <(zcat {input}) \
+             > {output}
         """
+        #| head -n {params.n} \
 
 rule blast_contamination:
     input:
-        "{sample}/middle_10000.fasta"
+        "{sample}/middle_5000.fasta"
     output:
         "{sample}/blastout.tsv",
+    threads: 10
     shell: """
     {module}
     module load blast
@@ -425,10 +433,24 @@ rule blast_contamination:
         -db nt \
         -outfmt "6 qseqid sskingdoms sscinames staxids" \
         -max_target_seqs 1 \
+        -task blastn \
+        -word_size 11 \
+        -gapopen 2 -gapextend 2 \
+        -penalty -3 -reward 2 \
         -query {input} \
+        -num_threads {threads} \
         | uniq --check-chars 5 \
         > {output}
         """
+
+rule blast_summary:
+    input:
+        expand('analysis/{sample}/{part}/blastout.tsv', sample=config['activesamples'], part=['Stalk', 'Spore'])
+    output:
+        'analysis/results/blastsummary.tsv'
+    shell:
+        'python BlastSummary.py --output {output} {input}'
+
 
 rule ecoli_contamination_rate:
     input:
