@@ -98,6 +98,7 @@ samples:
         i5: S506
         i7: N707
         Lane: "006"
+
     P63-amp1-F02-Spore:
         i5: S508
         i7: N715
@@ -173,7 +174,7 @@ samples:
     P63-carb1-F-Spore:
         i5: S503
         i7: N712
-    P63-F-Stalk:
+    P63-carb1-F-Stalk:
         i5: S506
         i7: N715
     P63-amp2-F29-Spore:
@@ -245,16 +246,29 @@ samples:
 
 
 activesamples: [
-    #    P48-PB-F1,
-    #    P48-PB-F2,
-    #    P48-PC-F3,
-    #    P48-PC-F4,
-    #    P48-PD-F5,
-    #    P48-PD-F6,
-    #    P48-PF-F7,
-    #    P48-PF-F8
+    P63-amp1-F02, P63-amp1-F02, P63-amp1-F04, P63-amp1-F04, P63-amp1-F06,
+    P63-amp1-F06, P63-carb1-F07, P63-carb1-F07, P63-carb1-F08, P63-carb1-F08,
+    P63-carb1-F09, P63-carb1-F09, P63-carb1-F12, P63-carb1-F12, P63-amp2-F16,
+    P63-amp2-F16, P63-amp2-F17, P63-amp2-F17, P63-amp2-F19, P63-amp2-F19,
+    P63-amp3-F24, P63-amp3-F24, P63-amp3-F25, P63-amp3-F25,
+    P63-amp2-F29, P63-amp2-F29, P63-amp2-F31, P63-amp2-F31, P63-amp2-F33,
+    P63-amp2-F33, P63-amp4-F38, P63-amp4-F38, P63-amp4-F39, P63-amp4-F39,
+    P63-amp5-F42, P63-amp5-F42, P63-amp5-F45, P63-amp5-F45, P63-amp2-F14,
+    P63-amp2-F14, P63-amp4-F33, P63-amp4-F33, P63-carb1-F11, P63-carb1-F11,
+    P63-amp5-F43,
     ]
 
+inactivesamples: [
+    P48-PB-F1,
+    P48-PB-F2,
+    P48-PC-F3,
+    P48-PC-F4,
+    P48-PD-F5,
+    P48-PD-F6,
+    P48-PF-F7,
+    P48-PF-F8,
+    P63-carb1-F
+    ]
 
 indexes:
     S502: ATAGAGAG

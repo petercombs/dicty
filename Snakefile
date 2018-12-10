@@ -5,7 +5,7 @@ min_version("5.0")
 
 configfile: "config.yaml"
 
-localrules: makedir, all, exists
+localrules: makedir, all, exists, sentinel_hq, sentinel_exists
 
 # Directories
 from os import path
@@ -56,6 +56,8 @@ def getreads(readnum):
                     continue
 
             return sorted(retfiles)
+        print("Couldn't find configuration for '{}'".format(wildcards))
+        return []
 
     return retfun
 
@@ -70,7 +72,7 @@ rule all:
         'analysis/results/combined.all.tsv',
         'analysis/results/manhattan.png',
         expand('analysis/results/{sample}_scores.tsv',
-                sample=config['activesamples']
+                sample=config['activesamples']+config['inactivesamples'],
         ),
         'analysis/results/blastsummary.tsv',
 
@@ -221,6 +223,11 @@ rule exists:
 rule sentinel_hq:
     output: touch("analysis/sentinels/high_quality")
 
+rule sentinel_exists:
+    output: touch("analysis/sentinels/all_exist")
+    input:
+        expand("analysis/{sample}/{part}/exists",
+                    sample=config['activesamples']+config['inactivesamples'], part=['Stalk', 'Spore']),
 
 # SNP calling
 
@@ -401,7 +408,9 @@ rule high_quality_maps:
 
 rule all_middle_seqs:
     input:
-        expand("analysis/{sample}/{part}/middle_{{n}}.fasta", sample=config['activesamples'], part=['Stalk', 'Spore'])
+        expand("analysis/{sample}/{part}/middle_{{n}}.fasta",
+                sample=config['activesamples'] + config['inactivesamples'],
+                part=['Stalk', 'Spore'])
     output:
         touch("analysis/sentinels/all_middle_{n}")
 
@@ -444,7 +453,9 @@ rule blast_contamination:
 
 rule blast_summary:
     input:
-        expand('analysis/{sample}/{part}/blastout.tsv', sample=config['activesamples'], part=['Stalk', 'Spore'])
+        expand('analysis/{sample}/{part}/blastout.tsv',
+                sample=config['activesamples'] + config['inactivesamples'],
+                part=['Stalk', 'Spore'])
     output:
         'analysis/results/blastsummary.tsv'
     shell:
