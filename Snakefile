@@ -122,6 +122,60 @@ rule fisher_pvalues:
     python CombinePvals.py --output analysis/results/combined {input.scores}
     """
 
+rule dictybase_annotation:
+    input: "Reference/exists"
+    output: "Reference/dicty.gff"
+    shell: """
+    cd Reference
+    wget http://dictybase.org/download/gff3/dicty_gff3_11302016.zip
+    unzip -j dicty_gff3_11302016.zip
+    cd ..
+    cat Reference/chromosome_*.gff | grep -v '^#' > {output}
+    """
+
+rule dicty_annotation_gtf:
+    input: "Reference/dicty.gff"
+    output: "Reference/dicty.gtf"
+    shell: """
+    module load cufflinks
+    gffread -To {output} {input}
+    """
+
+
+rule dictybase_exons:
+    input: "Reference/dicty.gtf"
+    output: "Reference/exons.gtf"
+    shell: "ml bedtools; grep exon {input} | grep DDB_G | bedtools sort > {output}"
+
+rule scores_to_bed:
+    input:
+        tsv="{sample}.{part}.tsv"
+    output:
+        "{sample}.{part}.bed",
+    shell: """
+    module load bedtools
+    awk '$2 < .001 {{split($1,a,":"); printf("%s\t%d\t%d\t{wildcards.part}_%d\t%g\\n", a[1], a[2], a[2]+1, NR, $2)}}' {input.tsv}  \
+    | bedtools sort \
+    > {output[0]}
+
+    """
+
+rule genes_near_snps:
+    input:
+        genes="Reference/exons.gtf",
+        bed="{sample}.{part}.bed",
+    output:
+        "{sample}.{part}.window_{dist}k.bed"
+    shell: """
+    module load bedtools bioawk
+    bedtools window -w {wildcards.dist}000 -a {input.bed} -b {input.genes} \
+        | bioawk -t '{{print $1,$2,$3,$4,$5,$14}}' \
+        | sort -u \
+        > {output}
+        """
+
+
+
 rule dictybase_bed:
     input:
         snp_data="analysis/results/combined.all.tsv",
