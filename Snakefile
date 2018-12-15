@@ -115,6 +115,7 @@ rule fisher_pvalues:
         'analysis/results/combined.all.tsv',
         'analysis/results/combined.Stalk.tsv',
         'analysis/results/combined.Spore.tsv',
+        'analysis/results/combined.Random.tsv',
         'analysis/results/manhattan.png',
     conda: "envs/dicty.yaml"
     shell: """
@@ -145,7 +146,14 @@ rule dicty_annotation_gtf:
 rule dictybase_exons:
     input: "Reference/dicty.gtf"
     output: "Reference/exons.gtf"
-    shell: "ml bedtools; grep exon {input} | grep DDB_G | bedtools sort > {output}"
+    shell: """
+    ml bedtools
+    grep exon {input} \
+        | grep DDB_G \
+        | grep -v "Shaulsky group" \
+        | bedtools sort \
+        > {output}
+        """
 
 rule Santorelli_coordinate_translate:
     input:
@@ -183,12 +191,22 @@ rule genes_near_snps:
     shell: """
     module load bedtools bioawk
     bedtools window -w {wildcards.dist}000 -a {input.bed} -b {input.genes} \
-        | bioawk -t '{{print $1,$2,$3,$4,$5,$14}}' \
+        | bioawk -t '{{print $1,$2,$3,$4,$5,$14,$9,$10}}' \
         | sort -u \
         > {output}
         """
 
-
+rule gene_expression_near_snps:
+    input:
+        "analysis/results/snps_genexpr/exists",
+        snps="analysis/results/combined.{part}.window_5k.bed",
+    output:
+        "analysis/results/snps_genexpr/{part}_1.png"
+    conda: "envs/dicty.yaml"
+    shell: """
+    export BACKEND=Agg
+    python PlotGenesNearSNPs.py --outdir analysis/results/snps_genexpr {input.snps}
+    """
 
 rule dictybase_bed:
     input:
