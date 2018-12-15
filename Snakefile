@@ -147,6 +147,20 @@ rule dictybase_exons:
     output: "Reference/exons.gtf"
     shell: "ml bedtools; grep exon {input} | grep DDB_G | bedtools sort > {output}"
 
+rule Santorelli_coordinate_translate:
+    input:
+        chrom_names="chrom_names_chr.txt",
+        santorelli="Reference/Santorelli2009-S2.tsv",
+    output:
+        "Reference/Santorelli2009-Mutants.bed",
+    shell: """
+    module load bedtools bioawk
+    bioawk -t 'NR>1 {{split($3,a, ":"); print a[1], a[2], a[2]+1, $2}}' {input.santorelli} \
+        | ./QuickTranslate -f 1 -t 0 {input.chrom_names} - - \
+        | bedtools sort \
+        > {output}
+        """
+
 rule scores_to_bed:
     input:
         tsv="{sample}.{part}.tsv"
