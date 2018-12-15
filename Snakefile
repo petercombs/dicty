@@ -75,6 +75,7 @@ rule all:
                 sample=config['activesamples']+config['inactivesamples'],
         ),
         'analysis/results/blastsummary.tsv',
+        "analysis/results/mutant_distance.png",
 
 ## Pooled Pipeline specific
 
@@ -168,6 +169,27 @@ rule Santorelli_coordinate_translate:
         | bedtools sort \
         > {output}
         """
+
+rule closest_mutants:
+    input:
+        bed="{sample}.bed",
+        mutants="Reference/Santorelli2009-Mutants.bed"
+    output:
+        "{sample}.closest_mutant.bed"
+    shell: """
+    module load bedtools
+    bedtools closest -a {input.bed} -b {input.mutants} -d > {output}
+    """
+
+rule plot_closest_mutants:
+    input:
+        stalk="analysis/results/combined.Stalk.closest_mutant.bed",
+        spore="analysis/results/combined.Spore.closest_mutant.bed",
+        random="analysis/results/combined.Random.closest_mutant.bed",
+    output:
+        "analysis/results/mutant_distance.png"
+    conda: "envs/dicty.yaml"
+    shell: "python PlotClosestMutants.py"
 
 rule scores_to_bed:
     input:
