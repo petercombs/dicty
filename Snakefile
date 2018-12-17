@@ -156,6 +156,26 @@ rule dictybase_exons:
         > {output}
         """
 
+rule dictybase_merged_exons:
+    input: "Reference/exons.gtf"
+    output: "Reference/merged_exons.bed"
+    shell:"""
+    module load bedtools
+    bedtools merge -i {input} -s > {output}
+    """
+
+rule classify_nongene_regions:
+    input: "Reference/merged_exons.bed"
+    output:
+    "Reference/intergenic_types.bed",
+    "Reference/classified_intervals.bed",
+    shell: """
+    python GetIntergenicTypes.py
+    cat Reference/intergenic_types.bed Reference/merged_exons.bed| bedtools sort > Reference/classified_intervals.bed
+    """
+
+
+
 rule Santorelli_coordinate_translate:
     input:
         chrom_names="chrom_names_chr.txt",
