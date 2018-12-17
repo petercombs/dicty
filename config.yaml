@@ -102,147 +102,243 @@ samples:
     P63-amp1-F02-Spore:
         i5: S508
         i7: N715
+        AdmeraID: 18146FL-04-01-01
+        Lane: "002"
     P63-amp1-F02-Stalk:
         i5: S507
         i7: N707
+        AdmeraID: 18146FL-04-01-02
+        Lane: "002"
     P63-amp1-F04-Spore:
         i5: S507
         i7: N715
+        AdmeraID: 18146FL-04-01-03
+        Lane: "002"
     P63-amp1-F04-Stalk:
         i5: S507
         i7: N712
+        AdmeraID: 18146FL-04-01-04
+        Lane: "002"
     P63-amp1-F06-Spore:
         i5: S510
         i7: N710
+        AdmeraID: 18146FL-04-01-05
+        Lane: "002"
     P63-amp1-F06-Stalk:
         i5: S505
         i7: N707
+        AdmeraID: 18146FL-04-01-06
+        Lane: "002"
     P63-carb1-F07-Spore:
         i5: S502
         i7: N715
+        AdmeraID: 18146FL-04-01-07
+        Lane: "002"
     P63-carb1-F07-Stalk:
         i5: S505
         i7: N710
+        AdmeraID: 18146FL-04-01-08
+        Lane: "002"
     P63-carb1-F08-Spore:
         i5: S503
         i7: N711
+        AdmeraID: 18146FL-04-01-09
+        Lane: "002"
     P63-carb1-F08-Stalk:
         i5: S503
         i7: N710
+        AdmeraID: 18146FL-04-01-10
+        Lane: "002"
     P63-carb1-F09-Spore:
         i5: S511
         i7: N715
+        AdmeraID: 18146FL-04-01-11
+        Lane: "002"
     P63-carb1-F09-Stalk:
         i5: S502
         i7: N710
+        AdmeraID: 18146FL-04-01-12
+        Lane: "002"
     P63-carb1-F12-Spore:
         i5: S508
         i7: N710
+        AdmeraID: 18146FL-04-01-13
+        Lane: "002"
     P63-carb1-F12-Stalk:
         i5: S511
         i7: N707
+        AdmeraID: 18146FL-04-01-14
+        Lane: "002"
     P63-amp2-F16-Spore:
         i5: S505
         i7: N715
+        AdmeraID: 18146FL-04-01-15
+        Lane: "002"
     P63-amp2-F16-Stalk:
         i5: S508
         i7: N711
+        AdmeraID: 18146FL-04-01-16
+        Lane: "002"
     P63-amp2-F17-Spore:
         i5: S508
         i7: N712
+        AdmeraID: 18146FL-04-01-17
+        Lane: "002"
     P63-amp2-F17-Stalk:
         i5: S503
         i7: N707
+        AdmeraID: 18146FL-04-01-18
+        Lane: "002"
     P63-amp2-F19-Spore:
         i5: S511
         i7: N710
+        AdmeraID: 18146FL-04-01-19
+        Lane: "002"
     P63-amp2-F19-Stalk:
         i5: S506
         i7: N711
+        AdmeraID: 18146FL-04-01-20
+        Lane: "002"
     P63-amp3-F24-Spore:
         i5: S511
         i7: N712
+        AdmeraID: 18146FL-04-01-21
+        Lane: "002"
     P63-amp3-F24-Stalk:
         i5: S502
         i7: N711
+        AdmeraID: 18146FL-04-01-22
+        Lane: "002"
     P63-amp3-F25-Spore:
         i5: S507
         i7: N714
+        AdmeraID: 18146FL-04-01-23
+        Lane: "002"
     P63-amp3-F25-Stalk:
         i5: S511
         i7: N711
+        AdmeraID: 18146FL-04-01-24
+        Lane: "002"
     P63-carb1-F-Spore:
         i5: S503
         i7: N712
+        AdmeraID: 18146FL-04-01-25
+        Lane: "002"
     P63-carb1-F-Stalk:
         i5: S506
         i7: N715
+        AdmeraID: 18146FL-04-01-26
+        Lane: "002"
     P63-amp2-F29-Spore:
         i5: S510
         i7: N712
+        AdmeraID: 18146FL-04-01-27
+        Lane: "002"
     P63-amp2-F29-Stalk:
         i5: S505
         i7: N711
+        AdmeraID: 18146FL-04-01-28
+        Lane: "002"
     P63-amp2-F31-Spore:
         i5: S503
         i7: N715
+        AdmeraID: 18146FL-04-01-29
+        Lane: "002"
     P63-amp2-F31-Stalk:
         i5: S508
         i7: N714
+        AdmeraID: 18146FL-04-01-30
+        Lane: "002"
     P63-amp2-F33-Spore:
         i5: S505
         i7: N712
+        AdmeraID: 18146FL-04-01-31
+        Lane: "002"
     P63-amp2-F33-Stalk:
         i5: S510
         i7: N714
+        AdmeraID: 18146FL-04-01-32
+        Lane: "002"
     P63-amp4-F38-Spore:
         i5: S503
         i7: N714
+        AdmeraID: 18146FL-04-01-33
+        Lane: "002"
     P63-amp4-F38-Stalk:
         i5: S505
         i7: N714
+        AdmeraID: 18146FL-04-01-34
+        Lane: "002"
     P63-amp4-F39-Spore:
         i5: S502
         i7: N712
+        AdmeraID: 18146FL-04-01-35
+        Lane: "002"
     P63-amp4-F39-Stalk:
         i5: S507
         i7: N710
+        AdmeraID: 18146FL-04-01-36
+        Lane: "002"
     P63-amp5-F42-Spore:
         i5: S511
         i7: N714
+        AdmeraID: 18146FL-04-01-37
+        Lane: "002"
     P63-amp5-F42-Stalk:
         i5: S506
         i7: N710
+        AdmeraID: 18146FL-04-01-38
+        Lane: "002"
     P63-amp5-F45-Spore:
         i5: S506
         i7: N712
+        AdmeraID: 18146FL-04-01-39
+        Lane: "002"
     P63-amp5-F45-Stalk:
         i5: S502
         i7: N707
+        AdmeraID: 18146FL-04-01-40
+        Lane: "002"
     P63-amp2-F14-Spore:
         i5: S506
         i7: N707
+        AdmeraID: 18146FL-04-01-41
+        Lane: "002"
     P63-amp2-F14-Stalk:
         i5: S510
         i7: N711
+        AdmeraID: 18146FL-04-01-42
+        Lane: "002"
     P63-amp4-F33-Spore:
         i5: S510
         i7: N707
+        AdmeraID: 18146FL-04-01-43
+        Lane: "002"
     P63-amp4-F33-Stalk:
         i5: S506
         i7: N714
+        AdmeraID: 18146FL-04-01-44
+        Lane: "002"
     P63-carb1-F11-Spore:
         i5: S508
         i7: N707
+        AdmeraID: 18146FL-04-01-45
+        Lane: "002"
     P63-carb1-F11-Stalk:
         i5: S510
         i7: N715
+        AdmeraID: 18146FL-04-01-46
+        Lane: "002"
     P63-amp5-F43-Spore:
         i5: S502
         i7: N714
+        AdmeraID: 18146FL-04-01-47
+        Lane: "002"
     P63-amp5-F43-Stalk:
         i5: S507
         i7: N711
+        AdmeraID: 18146FL-04-01-48
+        Lane: "002"
 
 
 activesamples: [

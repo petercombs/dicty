@@ -26,6 +26,7 @@ fname_formats = [
     '*/{sample}-{part}-{i7Seq}-{i7Seq}-S*-L{Lane}-R{readnum}-*.fastq',
     '*/*{i5Seq}-{i7Seq}_S*_L{Lane}_R{readnum}_*.fastq.gz',
     '*/*{i7Seq}-{i5Seq}_S*_L{Lane}_R{readnum}_*.fastq.gz',
+    '*/{AdmeraID}_S*_L{Lane}_R{readnum}_*.fastq.gz',
     #'{sample}-{part}-R{readnum}.fastq.gz',
 ]
 
@@ -167,8 +168,8 @@ rule dictybase_merged_exons:
 rule classify_nongene_regions:
     input: "Reference/merged_exons.bed"
     output:
-    "Reference/intergenic_types.bed",
-    "Reference/classified_intervals.bed",
+        "Reference/intergenic_types.bed",
+        "Reference/classified_intervals.bed",
     shell: """
     python GetIntergenicTypes.py
     cat Reference/intergenic_types.bed Reference/merged_exons.bed| bedtools sort > Reference/classified_intervals.bed
