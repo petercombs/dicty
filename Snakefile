@@ -179,7 +179,7 @@ rule classify_nongene_regions:
 
 rule Santorelli_coordinate_translate:
     input:
-        chrom_names="chrom_names_chr.txt",
+        chrom_names="Reference/chrom_names_chr.txt",
         santorelli="Reference/Santorelli2009-S2.tsv",
     output:
         "Reference/Santorelli2009-Mutants.bed",
