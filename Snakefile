@@ -349,6 +349,11 @@ rule makedir:
 rule exists:
     output: touch('{prefix}/exists')
 
+rule all_blast:
+    input:
+        expand("analysis/{sample}/{part}/blastout.tsv",
+                    sample=config['activesamples']+config['inactivesamples'], part=['Stalk', 'Spore']),
+
 rule sentinel_hq:
     output: touch("analysis/sentinels/high_quality")
 
@@ -535,6 +540,14 @@ rule high_quality_maps:
     samtools view -f2 -F 260 -q30 -b {input.bam} > {output}
     """
 
+rule all_rand_seqs:
+    input:
+        expand("analysis/{sample}/{part}/rand_{{n}}.fasta",
+                sample=config['activesamples'] + config['inactivesamples'],
+                part=['Stalk', 'Spore'])
+    output:
+        touch("analysis/sentinels/all_rand_{n}")
+
 rule all_middle_seqs:
     input:
         expand("analysis/{sample}/{part}/middle_{{n}}.fasta",
@@ -557,9 +570,18 @@ rule middle_seqs:
         """
         #| head -n {params.n} \
 
+rule rand_seqs:
+    input:
+        getreads(1)
+    output:
+        "analysis/{sample}/{part}/rand_{n}.fasta"
+    shell: """
+         python RandomReadsToFasta.py --num-reads {wildcards.n} -o {output} {input}
+        """
+
 rule blast_contamination:
     input:
-        "{sample}/middle_5000.fasta"
+        "{sample}/rand_5000.fasta"
     output:
         "{sample}/blastout.tsv",
     threads: 10
