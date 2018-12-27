@@ -5,7 +5,7 @@ min_version("5.0")
 
 configfile: "config.yaml"
 
-localrules: makedir, all, exists, sentinel_hq, sentinel_exists
+localrules: makedir, all, exists, sentinel_hq, sentinel_exists, sentinel_generic
 
 # Directories
 from os import path
@@ -95,8 +95,8 @@ rule score_snps:
 
 rule snp_counts:
     input:
-        bam="{sample}/mapped_hq_dedup.bam",
-        bai="{sample}/mapped_hq_dedup.bam.bai",
+        bam="{sample}/mapped_hq_dedup_monomap.bam",
+        bai="{sample}/mapped_hq_dedup_monomap.bam.bai",
         variants="analysis/combined/all.snps.bed",
         code="CountSNPASE.py",
     output:
@@ -342,6 +342,18 @@ rule dedup:
 		INPUT={input} OUTPUT={output} METRICS_FILE={output}_dedup.metrics
         """
 
+rule mono_mappers:
+    input:
+        sentinel="analysis/sentinels/monomap",
+        bam="{sample}.bam",
+    output: "{sample}_monomap.bam"
+    conda: "envs/dicty.yaml"
+    shell: """ module load samtools
+    samtools sort -n {input.bam} \
+    | python FilterToMonomappers.py - - \
+    | samtools sort -o {output} -
+    """
+
 rule makedir:
     output: "{prefix}/"
     shell: "mkdir -p {wildcards.prefix}"
@@ -363,6 +375,10 @@ rule sentinel_exists:
         expand("analysis/{sample}/{part}/exists",
                     sample=config['activesamples']+config['inactivesamples'], part=['Stalk', 'Spore']),
 
+rule sentinel_generic:
+    output: touch("analysis/sentinels/{target}")
+
+ruleorder: sentinel_exists > sentinel_hq > all_rand_seqs > all_middle_seqs > sentinel_generic
 # SNP calling
 
 rule bowtie2_build:
