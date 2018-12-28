@@ -72,7 +72,7 @@ rule all:
     input:
         'analysis/results/combined.all.tsv',
         'analysis/results/manhattan.png',
-        expand('analysis/results/{sample}_scores.tsv',
+        expand('analysis/{sample}/scores.tsv',
                 sample=config['activesamples']+config['inactivesamples'],
         ),
         'analysis/results/blastsummary.tsv',
@@ -87,7 +87,7 @@ rule score_snps:
         code="ScoreSnps.py",
         dir="analysis/results/exists",
     output:
-        "analysis/results/{sample}_scores.tsv"
+        "analysis/{sample}/scores.tsv"
     conda: "envs/dicty.yaml"
     shell: """
     python ScoreSnps.py {input.stalk} {input.spore} {output}
@@ -111,7 +111,7 @@ rule snp_counts:
 
 rule fisher_pvalues:
     input:
-        scores=expand("analysis/results/{sample}_scores.tsv", sample=config['activesamples']),
+        scores=expand("analysis/{sample}/scores.tsv", sample=config['activesamples']),
         code="CombinePvals.py"
     output:
         'analysis/results/combined.all.tsv',
