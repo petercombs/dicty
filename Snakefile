@@ -344,12 +344,20 @@ rule index_bam:
     output: "{sample}.bam.bai"
     shell: " module load samtools; samtools index {input}"
 
+rule sort_bam:
+    input: "{sample}.bam"
+    output: "{sample}.sorted.bam"
+    shell: """  module load samtools
+    samtools sort -o {output} {input}
+    """
+
 rule namesort_bam:
     input: "{sample}.bam"
     output: "{sample}.namesort.bam"
     shell: """  module load samtools
     samtools sort -n -o {output} {input}
     """
+
 rule ecoli_bam:
     input:
         bam="{sample}/bowtie2_dedup.bam",
@@ -433,6 +441,17 @@ rule mono_mappers:
     | samtools sort -o {output} -
     """
 
+rule all_reads:
+    input:
+        bam=expand("analysis/{sample}/{part}/mapped_hq_dedup.bam",
+                    sample=config['activesamples'], part=['Stalk', 'Spore']),
+    output:
+        "analysis/combined/all_reads.bam"
+    shell: """module load samtools
+    samtools merge -l 9 {output} {input}
+    """
+
+
 rule makedir:
     output: "{prefix}/"
     shell: "mkdir -p {wildcards.prefix}"
@@ -455,7 +474,7 @@ rule sentinel_exists:
                     sample=config['activesamples']+config['inactivesamples'], part=['Stalk', 'Spore']),
 
 rule sentinel_generic:
-    output: touch("analysis/sentinels/{target}")
+    output: touch("analysis/sentinels/re{target}")
 
 ruleorder: sentinel_exists > sentinel_hq > all_rand_seqs > all_middle_seqs > sentinel_generic
 # SNP calling
@@ -650,6 +669,125 @@ rule all_middle_seqs:
                 part=['Stalk', 'Spore'])
     output:
         touch("analysis/sentinels/all_middle_{n}")
+
+rule coverage_bedgraph:
+    input:
+        bam="{sample}.bam",
+        index="{sample}.bam.bai",
+        genome="Reference/dicty.notrans.chroms.sizes",
+        sentinel="analysis/sentinels/rerun_coverage",
+    output:
+        cov="{sample}.cov.bed",
+        anycov="{sample}.anycov.bed",
+        bigwig="{sample}.cov.bw",
+    shell: """
+    module load bedtools bioawk
+    bedtools genomecov -g {input.genome} -ibam {input.bam} -bga \
+    | grep -v NC_0 \
+    | bedtools sort \
+    > {output.cov}
+
+    bioawk -t '$4 > 0 {{print $1,$2,$3,1}}' \
+        < {output.cov} \
+        | bedtools merge -d 5 \
+        > {output.anycov}
+
+    bedGraphToBigWig {output.cov} {input.genome} {output.bigwig}
+
+    """
+
+rule all_coverage_bedgraphs:
+    input:
+        expand("analysis/{sample}/{part}/mapped_hq_dedup.cov.bed",
+                sample=config['activesamples'], part=['Stalk', 'Spore'])
+    output:
+        touch("analysis/sentinels/all_coverage_bedgraphs")
+
+rule anycoverage_peaks:
+    input:
+        exists="analysis/results/macs2/exists",
+        beds=expand("analysis/{sample}/{part}/mapped_hq_dedup.anycov.bed",
+                sample=config['activesamples'], part=['Stalk', 'Spore']),
+    output:
+        peaks="analysis/results/macs2/NA_peaks.narrowPeak",
+        pileup="analysis/results/macs2/NA_treat_pileup.bdg",
+        bedgraph="analysis/results/macs2/pileup_sorted.bedgraph",
+    params:
+        outdir=lambda wildcards, input: path.dirname(input.exists)
+    shell: """
+    module load macs2
+    macs2 callpeak -f BED -t {input.beds} --outdir {params.outdir} --bdg --nomodel
+    bedtools sort -i {output.pileup} \
+        | bedtools intersect -a - -b Reference/dicty.notrans.chroms.bed \
+        > {output.bedgraph}
+    """
+
+rule anycoverage_star_peaks:
+    input:
+        exists="analysis/results/macs2_star/exists",
+        beds = expand("analysis/{sample}/{part}/Aligned.sortedByCoord.out_dedup.anycov.bed",
+                sample=config['activesamples'], part=['Stalk', 'Spore']),
+    output:
+        peaks="analysis/results/macs2_star/NA_peaks.narrowPeak",
+        pileup="analysis/results/macs2_star/NA_treat_pileup.bdg",
+        bedgraph="analysis/results/macs2_star/pileup_sorted.bedgraph",
+    params:
+        outdir=lambda wildcards, input: path.dirname(input.exists)
+    shell: """
+    module load macs2
+    macs2 callpeak -f BED -t {input.beds} --outdir analysis/results/macs2_star --bdg --nomodel
+    bedtools sort -i {output.pileup} \
+        | bedtools intersect -a - -b Reference/dicty.notrans.chroms.bed \
+        > {output.bedgraph}
+    """
+
+rule bedgraphtobigwig:
+    input: 
+        bdg="{file}.bedgraph",
+        genome="Reference/dicty.notrans.chroms.sizes"
+    output:
+        bw="{file}.bw"
+    shell:"bedGraphToBigWig {input.bdg} {input.genome} {output}"
+
+rule all_wasps:
+    input:
+        expand("analysis/{sample}/{part}/starwasp.bam",
+                sample=config['activesamples'], part=['Stalk', 'Spore'])
+    output:
+        touch("analysis/sentinels/all_wasps")
+
+rule all_stars:
+    input:
+        expand("analysis/{sample}/{part}/Aligned.sortedByCoord.out.bam",
+                sample=config['activesamples'], part=['Stalk', 'Spore'])
+    output:
+        touch("analysis/sentinels/all_stars")
+
+# GC Content calculations
+
+rule genomic_windows:
+    input:
+        "Reference/dicty.notrans.chroms.sizes"
+    output:
+        "Reference/dicty.{size}kb.bed"
+    shell: """
+    module load bedtools
+    bedtools makewindows -g {input} -w {wildcards.size}000 > {output}
+    """
+
+rule gc_content:
+    input:
+        fasta="Reference/combined_dd_ec.fasta",
+        bed="Reference/dicty.{size}kb.bed"
+    output:
+        "Reference/dicty.{size}kb.gc.tsv"
+    shell: """
+    module load bedtools
+    bedtools nuc -fi {input.fasta} -bed {input.bed} > {output}
+
+    """
+
+# Blast code
 
 rule middle_seqs:
     input:
