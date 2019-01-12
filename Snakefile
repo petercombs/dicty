@@ -19,6 +19,8 @@ star = '''STAR \
 --outSAMattributes MD NH --clip5pNbases 6 --outSAMtype BAM Unsorted \
 --readFilesCommand zcat --limitBAMsortRAM 20000000000 '''
 
+promoter_size = 1000
+
 fname_formats = [
     '*/{sample}-{part}-{i5}-{i7}-S*-L{Lane}-R{readnum}-*.fastq.gz',
     '*/{sample}-{part}-{i5Seq}-{i7Seq}-S*-L{Lane}-R{readnum}-*.fastq',
@@ -77,6 +79,9 @@ rule all:
         ),
         'analysis/results/blastsummary.tsv',
         "analysis/results/mutant_distance.png",
+        "analysis/results/combined.Stalk.vep.tsv",
+        "analysis/results/combined.Spore.vep.tsv",
+        "analysis/results/combined.Random.vep.tsv",
 
 ## Pooled Pipeline specific
 
@@ -125,6 +130,16 @@ rule fisher_pvalues:
     python CombinePvals.py --output analysis/results/combined {input.scores}
     """
 
+rule VEP_overlap:
+    input:
+        bed="analysis/results/combined.{part}.bed",
+        vep="analysis/combined/autosome_snps.vep_reduced.bed",
+    output:
+        tsv="analysis/results/combined.{part}.vep.tsv",
+    shell: """
+    bedtools intersect -wo -a {input.bed} -b {input.vep} > {output.tsv}
+    """
+
 rule dictybase_annotation:
     input: "Reference/exists"
     output: "Reference/dicty.gff"
@@ -166,16 +181,57 @@ rule dictybase_merged_exons:
     """
 
 rule classify_nongene_regions:
-    input: "Reference/merged_exons.bed"
+    input:
+        exons="Reference/exons.gtf",
+        genome_sizes="Reference/dicty.notrans.chroms.sizes",
+        merged_exons="Reference/merged_exons.bed",
     output:
-        "Reference/intergenic_types.bed",
-        "Reference/classified_intervals.bed",
+        intergenics="Reference/intergenic_types.bed",
+        classified="Reference/classified_intervals.bed",
     shell: """
-    python GetIntergenicTypes.py
-    cat Reference/intergenic_types.bed Reference/merged_exons.bed| bedtools sort > Reference/classified_intervals.bed
+    python GetIntergenicType.py > {output.intergenics}
+    cat {output.intergenics} Reference/merged_exons.bed | bedtools sort > {output.classified}
     """
 
+rule get_promoters:
+    input:
+        gff="Reference/genes.gff",
+        genome="Reference/dicty.notrans.chroms.sizes",
+    output: "Reference/promoters.gtf"
+    conda: "envs/dicty.yaml"
+    shell: """bedtools flank -s -l {promoter_size} -r 0 -i {input.gff} -g {input.genome} \
+        | bedtools subtract -a - -b {input.gff} \
+        | bedtools subtract -a - -b Reference/merged_exons.bed \
+        > {output}"""
 
+rule separate_introns_intergenics:
+    input:
+        loose_intergenic="Reference/intergenic_types.bed",
+        promoters="Reference/promoters.bed",
+    output:
+        introns="Reference/introns.bed",
+        intergenics="Reference/far_intergenics.bed",
+    conda: "envs/dicty.yaml"
+    shell: """
+    grep intron {input.loose_intergenic} > {output.introns}
+    bedtools subtract -a {input.loose_intergenic} -b {input.promoters} \
+        | grep -v intron \
+        | bedtools subtract -a - -b Reference/merged_exons.bed \
+        > {output.intergenics}
+    """
+
+rule gtf_to_bed:
+    input: "{file}.gtf"
+    output: "{file}.bed"
+    shell: """
+    module load bioawk
+    bioawk -t '$4 < $5 {{print $1,$4,$5,$9}}' {input} > {output}
+    """
+
+rule nuclear_filter:
+    input: "{file}.bed"
+    output: "{file}.nuclear.bed",
+    shell: "grep 'DDB02324' {input} > {output}"
 
 rule Santorelli_coordinate_translate:
     input:
@@ -210,7 +266,29 @@ rule plot_closest_mutants:
     output:
         "analysis/results/mutant_distance.png"
     conda: "envs/dicty.yaml"
-    shell: "python PlotClosestMutants.py"
+    shell: """
+    export BACKEND=Agg
+    python PlotClosestMutants.py"""
+
+rule chrom_coords:
+    input:
+        "{file}.bed"
+    output:
+        "{file}.chr.bed"
+    shell: "./QuickTranslate --from 0 --to 1 Reference/chrom_names_chr.txt {input} {output}"
+
+rule reduce_vep_snps:
+    input:
+        vcf="analysis/combined/autosome_snps.vep.vcf",
+        exons="Reference/exons.gtf",
+    output: "analysis/combined/autosome_snps.vep_reduced.bed"
+    shell: """
+    module load bioawk
+    grep -v "##" {input.vcf} \
+        | python ExtractVEP.py --promoter-range {promoter_size} -k 0 1 7 -p 7 -g {input.exons} \
+        | bioawk -t '{{print $1,$2-1,$2,$3,"."}}'  \
+        > {output}
+        """
 
 rule scores_to_bed:
     input:
@@ -225,6 +303,7 @@ rule scores_to_bed:
 
     """
 
+ruleorder: reduce_vep_snps > scores_to_bed
 rule genes_near_snps:
     input:
         genes="Reference/exons.gtf",
