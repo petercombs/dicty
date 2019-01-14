@@ -643,6 +643,88 @@ rule map_gdna:
             --output-fmt bam -o {output} -
         """
 
+rule star_genome_generate:
+    input:
+        fasta="{file}.fasta",
+        outdir_exists = "{file}/exists"
+    output:
+        "{file}/Genome"
+    shell: """
+    module load STAR
+    STAR --runMode genomeGenerate --genomeFastaFiles {input.fasta} --genomeDir {wildcards.file}
+    """
+
+
+
+rule star_nowasp:
+    input:
+        unpack(getreads(1)),
+        unpack(getreads(2)),
+        ancient(path.join(analysis_dir, "{sample}", "{part}", "exists")),
+        star_index="Reference/combined_dd_ec/Genome",
+        fasta="Reference/combined_dd_ec.fasta",
+        sentinel="analysis/sentinels/re_star",
+    output:
+        path.join(analysis_dir, "{sample}", "{part}", "Aligned.sortedByCoord.out.bam")
+    benchmark:
+        path.join(analysis_dir, "{sample}", "{part}", "nostarwasp.log")
+    params:
+        index=lambda wildcards, input: path.dirname(input.star_index),
+        r1s=getreadscomma(1),
+        r2s=getreadscomma(2),
+        outdir= lambda wildcards, output: path.dirname(output[0])
+    threads: 6
+    shell: """ module load STAR/2.6.1d
+    STAR \
+		--genomeDir {params.index} \
+		--runThreadN 11 \
+        --runMode alignReads \
+        --readFilesIn {params.r1s} {params.r2s} \
+        --readFilesCommand zcat \
+        --outFileNamePrefix {params.outdir}/ \
+        --outSAMtype BAM SortedByCoordinate \
+        --bamRemoveDuplicatesType UniqueIdentical \
+        --outFilterMultimapNmax 1 \
+        #--outSAMmultNmax 1 \
+        """
+
+rule star_wasp:
+    input:
+        unpack(getreads(1)),
+        unpack(getreads(2)),
+        ancient(path.join(analysis_dir, "{sample}", "{part}", "exists")),
+        star_index="Reference/combined_dd_ec/Genome",
+        fasta="Reference/combined_dd_ec.fasta",
+        vcf="analysis/combined/snps_with_gt.vcf",
+    output:
+        path.join(analysis_dir, "{sample}", "{part}", "starwasp.bam")
+    benchmark:
+        path.join(analysis_dir, "{sample}", "{part}", "starwasp.log")
+    params:
+        index=lambda wildcards, input: path.dirname(input.star_index),
+        r1s=getreadscomma(1),
+        r2s=getreadscomma(2),
+        outdir= lambda wildcards, output: path.dirname(output[0])
+    threads: 6
+    shell: """ module load STAR/2.6.1d
+    STAR \
+		--genomeDir {params.index} \
+		--runThreadN 11 \
+        --runMode alignReads \
+        --readFilesIn {params.r1s} {params.r2s} \
+        --readFilesCommand zcat \
+        --outFileNamePrefix {params.outdir}/wasp_ \
+        --outSAMtype BAM SortedByCoordinate \
+        --outSAMmultNmax 1 \
+        --bamRemoveDuplicatesType UniqueIdentical \
+        --outFilterMultimapNmax 1 \
+        --varVCFfile {input.vcf} \
+        --outSAMattributes All vA vG vW \
+        --waspOutputMode SAMtag
+
+    mv {params.outdir}/wasp_Aligned.sortedByCoord.out.bam {output}
+        """
+
 rule high_quality_maps:
     # https://www.biostars.org/p/163429/
     input:
