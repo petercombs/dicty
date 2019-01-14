@@ -1,4 +1,5 @@
 from snakemake.utils import min_version
+from textwrap import dedent
 from glob import glob
 
 min_version("5.0")
@@ -127,7 +128,7 @@ rule fisher_pvalues:
     conda: "envs/dicty.yaml"
     shell: """
     export MPLBACKEND=Agg
-    python CombinePvals.py --output analysis/results/combined {input.scores}
+    python CombinePvals.py --output-prefix analysis/results/combined {input.scores}
     """
 
 rule VEP_overlap:
@@ -146,7 +147,7 @@ rule dictybase_annotation:
     shell: """
     cd Reference
     wget http://dictybase.org/download/gff3/dicty_gff3_11302016.zip
-    unzip -j dicty_gff3_11302016.zip
+    unzip -foj dicty_gff3_11302016.zip
     cd ..
     cat Reference/chromosome_*.gff | grep -v '^#' > {output}
     """
@@ -292,16 +293,21 @@ rule reduce_vep_snps:
 
 rule scores_to_bed:
     input:
-        tsv="{sample}.{part}.tsv"
+        pval_cutoff = 'params/pval_cutoff',
+        tsv="{sample}.{part}.tsv",
     output:
         "{sample}.{part}.bed",
-    shell: """
+    params:
+        pval_cutoff = lambda wildcards, input: float(next(open(input.pval_cutoff)).strip())
+    shell: dedent("""
     module load bedtools
-    awk '$2 < .001 {{split($1,a,":"); printf("%s\t%d\t%d\t{wildcards.part}_%d\t%g\\n", a[1], a[2], a[2]+1, NR, $2)}}' {input.tsv}  \
+    awk '$2 < {params.pval_cutoff} {{split($1,a,":"); \
+                                    printf("%s\t%d\t%d\t{wildcards.part}_%d\t%g\\n", \
+                                            a[1], a[2]-1, a[2], NR, $2)\
+                                   }}' {input.tsv}  \
     | bedtools sort \
     > {output[0]}
-
-    """
+    """)
 
 ruleorder: reduce_vep_snps > scores_to_bed
 rule genes_near_snps:
@@ -894,24 +900,37 @@ rule rand_seqs:
          python RandomReadsToFasta.py --num-reads {wildcards.n} -o {output} {input}
         """
 
+rule rand_seqs_simple:
+    input:
+        getreads(1)
+    output:
+        "analysis/{sample}/rand_{n}.fasta"
+    shell: """
+         python RandomReadsToFasta.py --num-reads {wildcards.n} -o {output} {input}
+        """
+
+ruleorder: rand_seqs > rand_seqs_simple
+
+
 rule blast_contamination:
     input:
-        "{sample}/rand_5000.fasta"
+        fasta="{sample}/rand_5000.fasta",
+        sentinel="analysis/sentinels/reblast",
     output:
         "{sample}/blastout.tsv",
-    threads: 10
+    threads: 20
     shell: """
     {module}
     module load blast
     blastn \
         -db nt \
-        -outfmt "6 qseqid sskingdoms sscinames staxids" \
+        -outfmt "6 qseqid sskingdoms sscinames staxids qseq" \
         -max_target_seqs 1 \
         -task blastn \
         -word_size 11 \
         -gapopen 2 -gapextend 2 \
         -penalty -3 -reward 2 \
-        -query {input} \
+        -query {input.fasta} \
         -num_threads {threads} \
         | uniq --check-chars 5 \
         > {output}
@@ -962,6 +981,7 @@ rule split_flowers:
             SeqIO.write(rec, outf, 'fasta')
         for f in loci.values():
             f.close()
+
 
 rule clustalo:
     input:

@@ -59,7 +59,7 @@
         },
         "blast_contamination":
         {
-            "cpus": 10,
+            "cpus": 20,
             "time": "4:00:00"
         }
 }
