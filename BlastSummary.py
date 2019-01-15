@@ -18,8 +18,10 @@ if __name__ == "__main__":
     bact = Counter()
     dicty = Counter()
     other_euk = Counter()
+    keys = []
 
     for fname in args.blast_files:
+        keys.append(fname)
         for line in open(fname):
             data = line.split("\t")
             if data[1] == "Bacteria":
@@ -29,8 +31,6 @@ if __name__ == "__main__":
                     dicty[fname] += 1
                 else:
                     other_euk[fname] += 1
-
-    keys = sorted(bact.keys() | dicty.keys() | other_euk.keys())
 
     print("File", "Dicty", "Bacteria", "Other_Eukaryote", sep="\t", file=args.output)
 

@@ -34,6 +34,18 @@
                 "memory": "15G"
 
         },
+        "star_wasp" :
+        {
+                "time" : "08:00:00",
+                "cpus": 10,
+                "memory": "30G"
+        },
+        "star_nowasp" :
+        {
+                "time" : "08:00:00",
+                "cpus": 10,
+                "memory": "30G"
+        },
         "star_map" :
         {
                 "time" : "01:00:00",
@@ -44,5 +56,10 @@
         {
             "cpus": 4
 
+        },
+        "blast_contamination":
+        {
+            "cpus": 20,
+            "time": "4:00:00"
         }
 }
