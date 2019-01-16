@@ -694,6 +694,15 @@ rule star_nowasp:
         #--outSAMmultNmax 1 \
         """
 
+rule fix_snp_gt:
+    input:
+        "analysis/combined/snps.vcf"
+    output:
+        "analysis/combined/snps_with_gt.vcf"
+    shell: """
+    awk '$4 != "N" {{print $0 "\tGT\t0/1"}}' < {input} > {output}
+    """
+
 rule star_wasp:
     input:
         unpack(getreads(1)),
