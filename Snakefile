@@ -691,7 +691,7 @@ rule star_nowasp:
         --outSAMtype BAM SortedByCoordinate \
         --bamRemoveDuplicatesType UniqueIdentical \
         --outFilterMultimapNmax 1 \
-        #--outSAMmultNmax 1 \
+        --outSAMmultNmax 1 
         """
 
 rule snps_vcf:
