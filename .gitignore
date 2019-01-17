@@ -10,7 +10,8 @@ tmp/
 KmerBasesToNumber
 fakehawk*
 __pycache__
+*temp*
+.ipynb_checkpoints/
 test*
 earle*
 .ipynb*
-
