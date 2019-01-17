@@ -284,6 +284,55 @@ def plot_top_snps(
     close()
 
 
+def make_ld_plot(
+    type_scores,
+    name,
+    bin_size=1e3,
+    new_figure=True,
+    outdir="analysis/results",
+    xmin=0,
+    xmax=1e4,
+):
+    """Plot correlation SNP-SNP correlation vs genomic distance
+
+    We don't yet have a great sense of what the linkage is in the populations
+    we're looking at. Flowers et al 2010 implies it should be small, but we
+    don't really know until we try it.
+    """
+    type_scores = type_scores.sort_index()
+    bins = defaultdict(list)
+    last_snp = ""
+    last_chr = ""
+    last_pos = -1
+    for snp in type_scores.index:
+        chr, pos = snp.split(":")
+        pos = int(pos)
+
+        if last_chr == chr:
+            dist_bin = int((pos - last_pos) // bin_size)
+            bins[dist_bin].append((type_scores[last_snp], type_scores[snp]))
+
+        last_snp = snp
+        last_chr = chr
+        last_pos = pos
+    corrs = pd.Series(index=bins.keys(), data=nan).sort_index()
+    counts = pd.Series(index=bins.keys(), data=-1).sort_index()
+
+    for bin, pvals in bins.items():
+        counts[bin] = len(pvals)
+        if counts[bin] > 2:
+            corrs[bin] = np.corrcoef(*zip(*pvals))[0, 1]
+
+    if new_figure:
+        figure()
+    corrs = corrs.dropna()
+    plot(corrs.index * bin_size, corrs, label="Correlation")
+    xlim(xmin, xmax)
+    mpl.savefig(path.join(outdir, "{}_ld.png".format(name)))
+    # counts.plot()
+    return corrs, counts
+
+
 if __name__ == "__main__":
     args = parse_args()
     outdir = path.dirname(args.output_prefix)
@@ -360,6 +409,10 @@ if __name__ == "__main__":
     make_tehranchigram(all_stalk_freqs, all_spore_freqs)
 
     make_manhattan_plot(combined_pvals_fwd, combined_pvals_rev, outdir=outdir)
+
+    make_ld_plot(combined_pvals_fwd, "Spore", outdir=outdir)
+    make_ld_plot(combined_pvals_rev, "Stalk", outdir=outdir)
+    make_ld_plot(combined_pvals_rand, "Random", outdir=outdir)
 
     for i_name, i_dataset in (
         ("spore", combined_pvals_fwd),
