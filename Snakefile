@@ -694,6 +694,17 @@ rule star_nowasp:
         #--outSAMmultNmax 1 \
         """
 
+rule snps_vcf:
+    input: "analysis/combined/all.vcf.gz"
+    output: "analysis/combined/snps.vcf"
+    shell: """
+    zcat {input} \
+        | sed 's/,<\*>//' \
+        | perl -pe 's/(QS=[^,]*,[^,]*),0/\1/' \
+        | bcftools view -Ga --types snps -m 2 -M 2  -O v \
+        > {output}
+    """
+
 rule fix_snp_gt:
     input:
         "analysis/combined/snps.vcf"
