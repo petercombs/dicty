@@ -236,7 +236,7 @@ rule nuclear_filter:
 
 rule Santorelli_coordinate_translate:
     input:
-        chrom_names="chrom_names_chr.txt",
+        chrom_names="Reference/chrom_names_chr.txt",
         santorelli="Reference/Santorelli2009-S2.tsv",
     output:
         "Reference/Santorelli2009-Mutants.bed",
@@ -691,8 +691,19 @@ rule star_nowasp:
         --outSAMtype BAM SortedByCoordinate \
         --bamRemoveDuplicatesType UniqueIdentical \
         --outFilterMultimapNmax 1 \
-        #--outSAMmultNmax 1 \
+        --outSAMmultNmax 1 
         """
+
+rule snps_vcf:
+    input: "analysis/combined/all.vcf.gz"
+    output: "analysis/combined/snps.vcf"
+    shell: """
+    zcat {input} \
+        | sed 's/,<\*>//' \
+        | perl -pe 's/(QS=[^,]*,[^,]*),0/\1/' \
+        | bcftools view -Ga --types snps -m 2 -M 2  -O v \
+        > {output}
+    """
 
 rule fix_snp_gt:
     input:
