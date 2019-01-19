@@ -458,6 +458,18 @@ rule all_reads:
     """
 
 
+rule all_reads_by_group:
+    input:
+        dir="analysis/combined/{group}/exists",
+        bam=lambda wildcards: expand("analysis/{sample}/{part}/mapped_hq_dedup.bam",
+                    sample=config[wildcards.group], part=['Stalk', 'Spore']),
+    output:
+        "analysis/combined/{group}/all_reads.bam"
+    shell: """module load samtools
+    samtools merge -l 9 {output} {input}
+    """
+
+
 rule makedir:
     output: "{prefix}/"
     shell: "mkdir -p {wildcards.prefix}"
@@ -777,6 +789,19 @@ rule all_middle_seqs:
                 part=['Stalk', 'Spore'])
     output:
         touch("analysis/sentinels/all_middle_{n}")
+
+rule coverage_in_windows:
+    input:
+        bam="{sample}.bam",
+        bed="Reference/dicty.{size}kb.bed",
+    output:
+        "{sample}.{size}kb.bed"
+    shell: """
+    module load bedtools bioawk
+    bedtools coverage -a {input.bed} -b {input.bam} \
+    | bioawk -t '{{print $1,$2,$3,$4/$6}}' \
+    > {output}
+    """
 
 rule coverage_bedgraph:
     input:
