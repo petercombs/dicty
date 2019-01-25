@@ -61,13 +61,13 @@ if __name__ == "__main__":
     for cov_file in args.window_coverage_bed:
         outdir = path.dirname(cov_file)
         cov = pd.read_table(cov_file, header=None, names=COV_COLS, index_col=[0, 1, 2])
-        total_cov = sum(gc["seq_len"] * cov["cov"])
+        # total_cov = sum(gc["seq_len"] * cov["cov"])
         gc_cov = pd.Series(index=gc_steps, data=np.nan)
         total_len = pd.Series(index=gc_steps, data=np.nan)
 
         for bin_lo, bin_hi in zip(gc_cov.index, gc_cov.index[1:]):
             q = gc.query("{} <= frac_gc < {}".format(bin_lo, bin_hi))
-            gc_cov[bin_lo] = sum(q["seq_len"] * cov.ix[q.index, "cov"])
+            gc_cov[bin_lo] = sum(cov.ix[q.index, "cov"])
             total_len[bin_lo] = sum(q["seq_len"])
 
         y = gc_cov / total_len
