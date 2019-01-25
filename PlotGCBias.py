@@ -4,6 +4,7 @@ from argparse import ArgumentParser
 from os import path
 from matplotlib.pyplot import (
     scatter,
+    hlines,
     xlim,
     ylim,
     hist,
@@ -11,6 +12,8 @@ from matplotlib.pyplot import (
     legend,
     savefig,
     subplot,
+    xlabel,
+    ylabel,
 )
 
 GC_COLS = [
@@ -56,7 +59,7 @@ if __name__ == "__main__":
     gc_high = step_ceil(gc.frac_gc.max(), args.step_size)
     gc_steps = np.arange(gc_low, gc_high, args.step_size)
 
-    common_path = path.commonpath(args.window_coverage_bed)
+    common_path = path.commonprefix(args.window_coverage_bed)
 
     for cov_file in args.window_coverage_bed:
         outdir = path.dirname(cov_file)
@@ -75,13 +78,28 @@ if __name__ == "__main__":
         figure(1)
         subplot(2, 1, 1)
         plotname = path.dirname(cov_file).replace(common_path, "")
-        scatter(gc_cov.index, y / y.mean(), label=plotname)
+        scatter(gc_cov.index * 100, y / y.mean(), label=plotname)
         figure()
-        scatter(gc_cov.index, y / y.mean(), label=plotname)
+        hlines(
+            1,
+            gc_cov.index.min() * 100,
+            gc_cov.index.max() * 100,
+            "k",
+            linestyles="dotted",
+        )
+        scatter(gc_cov.index * 100, y / y.mean(), label=plotname)
+        ylabel("Normed Coverage")
+        xlabel("% GC")
         savefig(path.join(outdir, "gc_cov_normed.png"))
 
     figure(1)
+    hlines(
+        1, gc_cov.index.min() * 100, gc_cov.index.max() * 100, "k", linestyles="dotted"
+    )
+    ylabel("Normed Coverage")
     legend()
     subplot(2, 1, 2)
-    hist(gc.frac_gc, bins=gc_steps)
+    hist(gc.frac_gc * 100, bins=gc_steps * 100)
+    xlabel("% GC")
+    ylabel("Density")
     savefig(path.join(common_path, "gc_cov_normed.png"))
