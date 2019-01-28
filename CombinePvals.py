@@ -299,7 +299,7 @@ def make_ld_plot(
     we're looking at. Flowers et al 2010 implies it should be small, but we
     don't really know until we try it.
     """
-    type_scores = type_scores.sort_index()
+    type_scores = pd.np.log10(type_scores.sort_index())
     bins = defaultdict(list)
     last_snp = ""
     last_chr = ""
@@ -325,10 +325,13 @@ def make_ld_plot(
 
     if new_figure:
         figure()
-    corrs = corrs.dropna()
-    plot(corrs.index * bin_size, corrs, label="Correlation")
+    # corrs = corrs.dropna()
+    is_good = counts > 10
+    plot((corrs.index * bin_size)[is_good], corrs[is_good], label="Correlation")
     xlim(xmin, xmax)
-    mpl.savefig(path.join(outdir, "{}_ld.png".format(name)))
+    ylim(-1, 1)
+    outfile = path.join(outdir, "{}_ld.png".format(name))
+    mpl.savefig(outfile)
     # counts.plot()
     return corrs, counts
 
