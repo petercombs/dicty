@@ -340,6 +340,374 @@ samples:
         AdmeraID: 18146FL-04-01-48
         Lane: "002"
 
+	Baym-F02-Stalk:
+		i5: '502'
+		i7: '701'
+		AdmeraID: '???-01'
+		Lane: '???'
+    Baym-F11-Stalk:
+		i5: '503'
+		i7: '701'
+		AdmeraID: '???-02'
+		Lane: '???'
+	Baym-F11-Spore:
+		i5: '505'
+		i7: '701'
+		AdmeraID: '???-03'
+		Lane: '???'
+	Baym-F33-Stalk:
+		i5: '506'
+		i7: '701'
+		AdmeraID: '???-04'
+		Lane: '???'
+	Baym-F02-Spore:
+		i5: '507'
+		i7: '701'
+		AdmeraID: '???-05'
+		Lane: '???'
+	Baym-F12-Stalk:
+		i5: '508'
+		i7: '701'
+		AdmeraID: '???-06'
+		Lane: '???'
+	Baym-F45-Stalk:
+		i5: '510'
+		i7: '701'
+		AdmeraID: '???-07'
+		Lane: '???'
+	Baym-F19-Stalk:
+		i5: '511'
+		i7: '701'
+		AdmeraID: '???-08'
+		Lane: '???'
+	Baym-F00-Spore:
+		i5: '502'
+		i7: '702'
+		AdmeraID: '???-09'
+		Lane: '???'
+	Baym-F12-Spore:
+		i5: '503'
+		i7: '702'
+		AdmeraID: '???-10'
+		Lane: '???'
+	Baym-F07-Spore:
+		i5: '505'
+		i7: '702'
+		AdmeraID: '???-11'
+		Lane: '???'
+	Baym-F45-Spore:
+		i5: '506'
+		i7: '702'
+		AdmeraID: '???-12'
+		Lane: '???'
+	Baym-F33-Spore:
+		i5: '507'
+		i7: '702'
+		AdmeraID: '???-13'
+		Lane: '???'
+	Baym-F00-Stalk:
+		i5: '508'
+		i7: '702'
+		AdmeraID: '???-14'
+		Lane: '???'
+	Baym-F19-Spore:
+		i5: '510'
+		i7: '702'
+		AdmeraID: '???-15'
+		Lane: '???'
+	Baym-F07-Stalk:
+		i5: '511'
+		i7: '702'
+		AdmeraID: '???-16'
+		Lane: '???'
+	BaymCool-F38-Stalk:
+		i5: '502'
+		i7: '703'
+		AdmeraID: '???-17'
+		Lane: '???'
+	BaymCool-F08-Stalk:
+		i5: '503'
+		i7: '703'
+		AdmeraID: '???-18'
+		Lane: '???'
+	BaymCool-F13-Stalk:
+		i5: '505'
+		i7: '703'
+		AdmeraID: '???-19'
+		Lane: '???'
+	BaymCool-F34-Spore:
+		i5: '506'
+		i7: '703'
+		AdmeraID: '???-20'
+		Lane: '???'
+	BaymCool-F14-Spore:
+		i5: '507'
+		i7: '703'
+		AdmeraID: '???-21'
+		Lane: '???'
+	BaymCool-F24-Spore:
+		i5: '508'
+		i7: '703'
+		AdmeraID: '???-22'
+		Lane: '???'
+	BaymCool-F24-Stalk:
+		i5: '510'
+		i7: '703'
+		AdmeraID: '???-23'
+		Lane: '???'
+	BaymCool-F29-Stalk:
+		i5: '511'
+		i7: '703'
+		AdmeraID: '???-24'
+		Lane: '???'
+	BaymCool-F13-Spore:
+		i5: '502'
+		i7: '704'
+		AdmeraID: '???-25'
+		Lane: '???'
+	BaymCool-F38-Spore:
+		i5: '503'
+		i7: '704'
+		AdmeraID: '???-26'
+		Lane: '???'
+	BaymCool-F29-Spore:
+		i5: '505'
+		i7: '704'
+		AdmeraID: '???-27'
+		Lane: '???'
+	BaymCool-F14-Stalk:
+		i5: '506'
+		i7: '704'
+		AdmeraID: '???-28'
+		Lane: '???'
+	BaymCool-F08-Spore:
+		i5: '507'
+		i7: '704'
+		AdmeraID: '???-29'
+		Lane: '???'
+	BaymCool-F04-Stalk:
+		i5: '508'
+		i7: '704'
+		AdmeraID: '???-30'
+		Lane: '???'
+	BaymCool-F34-Stalk:
+		i5: '510'
+		i7: '704'
+		AdmeraID: '???-31'
+		Lane: '???'
+	BaymCool-F04-Spore:
+		i5: '511'
+		i7: '704'
+		AdmeraID: '???-32'
+		Lane: '???'
+	BaymTMAC-F35-Spore:
+		i5: '502'
+		i7: '705'
+		AdmeraID: '???-33'
+		Lane: '???'
+	BaymTMAC-F16-Spore:
+		i5: '503'
+		i7: '705'
+		AdmeraID: '???-34'
+		Lane: '???'
+	BaymTMAC-F33-Stalk:
+		i5: '505'
+		i7: '705'
+		AdmeraID: '???-35'
+		Lane: '???'
+	BaymTMAC-F31-Spore:
+		i5: '506'
+		i7: '705'
+		AdmeraID: '???-36'
+		Lane: '???'
+	BaymTMAC-F37-Spore:
+		i5: '507'
+		i7: '705'
+		AdmeraID: '???-37'
+		Lane: '???'
+	BaymTMAC-F33-Spore:
+		i5: '508'
+		i7: '705'
+		AdmeraID: '???-38'
+		Lane: '???'
+	BaymTMAC-F18-Stalk:
+		i5: '510'
+		i7: '705'
+		AdmeraID: '???-39'
+		Lane: '???'
+	BaymTMAC-F16-Stalk:
+		i5: '511'
+		i7: '705'
+		AdmeraID: '???-40'
+		Lane: '???'
+	BaymTMAC-F37-Stalk:
+		i5: '502'
+		i7: '706'
+		AdmeraID: '???-41'
+		Lane: '???'
+	BaymTMAC-F10-Stalk:
+		i5: '503'
+		i7: '706'
+		AdmeraID: '???-42'
+		Lane: '???'
+	BaymTMAC-F18-Spore:
+		i5: '505'
+		i7: '706'
+		AdmeraID: '???-43'
+		Lane: '???'
+	BaymTMAC-F35-Stalk:
+		i5: '506'
+		i7: '706'
+		AdmeraID: '???-44'
+		Lane: '???'
+	BaymTMAC-F06-Spore:
+		i5: '507'
+		i7: '706'
+		AdmeraID: '???-45'
+		Lane: '???'
+	BaymTMAC-F06-Stalk:
+		i5: '508'
+		i7: '706'
+		AdmeraID: '???-46'
+		Lane: '???'
+	BaymTMAC-F31-Stalk:
+		i5: '510'
+		i7: '706'
+		AdmeraID: '???-47'
+		Lane: '???'
+	BaymTMAC-F10-Spore:
+		i5: '511'
+		i7: '706'
+		AdmeraID: '???-48'
+		Lane: '???'
+	BaymCoolTMAC-F39-Spore:
+		i5: '502'
+		i7: '707'
+		AdmeraID: '???-49'
+		Lane: '???'
+	BaymCoolTMAC-F35-Stalk:
+		i5: '503'
+		i7: '707'
+		AdmeraID: '???-50'
+		Lane: '???'
+	BaymCoolTMAC-F26-Spore:
+		i5: '505'
+		i7: '707'
+		AdmeraID: '???-51'
+		Lane: '???'
+	BaymCoolTMAC-F09-Stalk:
+		i5: '506'
+		i7: '707'
+		AdmeraID: '???-52'
+		Lane: '???'
+	BaymCoolTMAC-F42-Stalk:
+		i5: '507'
+		i7: '707'
+		AdmeraID: '???-53'
+		Lane: '???'
+	BaymCoolTMAC-F39-Stalk:
+		i5: '508'
+		i7: '707'
+		AdmeraID: '???-54'
+		Lane: '???'
+	BaymCoolTMAC-F43-Stalk:
+		i5: '510'
+		i7: '707'
+		AdmeraID: '???-55'
+		Lane: '???'
+	BaymCoolTMAC-F17-Stalk:
+		i5: '511'
+		i7: '707'
+		AdmeraID: '???-56'
+		Lane: '???'
+	BaymCoolTMAC-F42-Spore:
+		i5: '502'
+		i7: '710'
+		AdmeraID: '???-57'
+		Lane: '???'
+	BaymCoolTMAC-F25-Spore:
+		i5: '503'
+		i7: '710'
+		AdmeraID: '???-58'
+		Lane: '???'
+	BaymCoolTMAC-F35-Spore:
+		i5: '505'
+		i7: '710'
+		AdmeraID: '???-59'
+		Lane: '???'
+	BaymCoolTMAC-F17-Spore:
+		i5: '506'
+		i7: '710'
+		AdmeraID: '???-60'
+		Lane: '???'
+	BaymCoolTMAC-F25-Stalk:
+		i5: '507'
+		i7: '710'
+		AdmeraID: '???-61'
+		Lane: '???'
+	BaymCoolTMAC-F43-Spore:
+		i5: '508'
+		i7: '710'
+		AdmeraID: '???-62'
+		Lane: '???'
+	BaymCoolTMAC-F26-Stalk:
+		i5: '510'
+		i7: '710'
+		AdmeraID: '???-63'
+		Lane: '???'
+	BaymCoolTMAC-F09-Spore:
+		i5: '511'
+		i7: '710'
+		AdmeraID: '???-64'
+		Lane: '???'
+	NEXTFLEX-F09-Spore:
+		i5: ""
+		i7: 'NEXTFLEX1'
+        i7Seq: 'ATCTAGCC'
+		AdmeraID: '???-65'
+		Lane: '???'
+	NEXTFLEX-F09-Stalk:
+		i5: NEXTFLEX
+		i7: '2'
+        i7Seq: 'TATCTCTT'
+		AdmeraID: '???-66'
+		Lane: '???'
+	NEXTFLEX-F31-Spore:
+		i5: NEXTFLEX
+		i7: '3'
+        i7Seq: 'TAGATGCC'
+		AdmeraID: '???-67'
+		Lane: '???'
+	NEXTFLEX-F31-Stalk:
+		i5: NEXTFLEX
+		i7: '4'
+        i7Seq: 'CGCTCCTT'
+		AdmeraID: '???-68'
+		Lane: '???'
+	NEXTFLEX-F35-Spore:
+		i5: NEXTFLEX
+		i7: '5'
+        i7Seq: CGAGCGCC
+		AdmeraID: '???-69'
+		Lane: '???'
+	NEXTFLEX-F35-Stalk:
+		i5: NEXTFLEX
+		i7: '6'
+        i7Seq: 'TCGAGAGT'
+		AdmeraID: '???-70'
+		Lane: '???'
+	NEXTFLEX-F18-Spore:
+		i5: NEXTFLEX
+		i7: '7'
+        i7Seq: 'GCTCGGCC'
+		AdmeraID: '???-71'
+		Lane: '???'
+	NEXTFLEX-F18-Stalk:
+		i5: NEXTFLEX
+		i7: '8'
+        i7Seq: 'AGCTCAGT'
+		AdmeraID: '???-72'
+		Lane: '???'
 
 activesamples: [
     P63-amp1-F02, P63-amp1-F04, P63-amp1-F06, P63-carb1-F07, P63-carb1-F08,
@@ -360,6 +728,39 @@ inactivesamples: [
     P48-PF-F8,
     P63-carb1-F
     ]
+
+neil: [fake]
+
+nextera: [
+    P63-amp1-F02, P63-amp1-F04, P63-amp1-F06, P63-carb1-F07, P63-carb1-F08,
+    P63-carb1-F09, P63-carb1-F12, P63-amp2-F16, P63-amp2-F17, P63-amp2-F19,
+    P63-amp3-F24, P63-amp3-F25, P63-amp2-F29, P63-amp2-F31, P63-amp2-F33,
+    P63-amp4-F38, P63-amp4-F39, P63-amp5-F42, P63-amp5-F45, P63-amp2-F14,
+    P63-amp4-F33, P63-carb1-F11, P63-amp5-F43,
+]
+
+baym_standard: [ 
+    Baym-F00, Baym-F02, Baym-F07, Baym-F11, Baym-F19, Baym-F33, Baym-F45, 
+]
+
+baym_cool: [
+    BaymCool-F04, BaymCool-F08, BaymCool-F13, BaymCool-F14, BaymCool-F24,
+    BaymCool-F29, BaymCool-F34, BaymCool-F38,
+]
+
+baym_tmac: [
+    BaymTMAC-F06, BaymTMAC-F10, BaymTMAC-F16, BaymTMAC-F18, BaymTMAC-F31,
+    BaymTMAC-F33, BaymTMAC-F35, BaymTMAC-F37,
+]
+
+baym_cool_tmac: [
+    BaymCoolTMAC-F09, BaymCoolTMAC-F17, BaymCoolTMAC-F25, BaymCoolTMAC-F26,
+    BaymCoolTMAC-F35, BaymCoolTMAC-F39, BaymCoolTMAC-F42, BaymCoolTMAC-F43,
+]
+
+nextflex: [
+    NEXTFLEX-F09, NEXTFLEX-F18, NEXTFLEX-F31, NEXTFLEX-F35,
+]
 
 indexes:
     S502: ATAGAGAG
@@ -385,6 +786,15 @@ indexes:
     N714: GCTCATGA
     N715: ATCTCAGG
     N716: ACTCGCTA
+    "1": ATCTAGCC
+    "2": TATCTCTT
+    "3": TAGATGCC
+    "4": CGCTCCTT
+    "5": CGAGCGCC
+    "6": TCGAGAGT
+    "7": GCTCGGCC
+    "8": AGCTCAGT
+    NEXTFLEX1: TCTTTCCC 
 
 
 
