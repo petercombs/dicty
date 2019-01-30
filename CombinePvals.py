@@ -14,7 +14,7 @@ from collections import defaultdict
 import pandas as pd
 import numpy as np
 from numpy import arange, log10, nan, ceil, sqrt, isfinite
-from scipy.stats import combine_pvalues
+from scipy.stats import combine_pvalues, spearmanr
 from matplotlib.pyplot import (
     xlim,
     ylim,
@@ -321,7 +321,7 @@ def make_ld_plot(
     for bin, pvals in bins.items():
         counts[bin] = len(pvals)
         if counts[bin] > 2:
-            corrs[bin] = np.corrcoef(*zip(*pvals))[0, 1]
+            corrs[bin] = spearmanr(*zip(*pvals))[0]
 
     if new_figure:
         figure()
