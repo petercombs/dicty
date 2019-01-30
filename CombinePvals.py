@@ -301,6 +301,7 @@ def make_ld_plot(
     """
     type_scores = pd.np.log10(type_scores.sort_index())
     bins = defaultdict(list)
+    pairs_by_dist = defaultdict(list)
     last_snp = ""
     last_chr = ""
     last_pos = -1
@@ -311,6 +312,9 @@ def make_ld_plot(
         if last_chr == chr:
             dist_bin = int((pos - last_pos) // bin_size)
             bins[dist_bin].append((type_scores[last_snp], type_scores[snp]))
+            pairs_by_dist[pos - last_pos].append(
+                (type_scores[last_snp], type_scores[snp])
+            )
 
         last_snp = snp
         last_chr = chr
