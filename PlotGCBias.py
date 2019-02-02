@@ -33,7 +33,7 @@ COV_COLS = ["Chrom", "start", "stop", "cov"]
 
 def parse_args():
     parser = ArgumentParser()
-    parser.add_argument("--step-size", "-s", default=.05, type=float)
+    parser.add_argument("--step-size", "-s", default=1.0, type=float)
     parser.add_argument("gc_file")
     parser.add_argument("window_coverage_bed", nargs="+")
 
@@ -52,9 +52,9 @@ def step_ceil(value, stepsize):
 if __name__ == "__main__":
     args = parse_args()
     gc = pd.read_table(args.gc_file, index_col=[0, 1, 2], names=GC_COLS, header=0)
-    gc_low = step_floor(gc.frac_gc.min(), args.step_size)
-    gc_high = step_ceil(gc.frac_gc.max(), args.step_size)
-    gc_steps = np.arange(gc_low, gc_high, args.step_size)
+    gc_low = step_floor(gc.frac_gc.min(), args.step_size/100)
+    gc_high = step_ceil(gc.frac_gc.max(), args.step_size/100)
+    gc_steps = np.arange(gc_low, gc_high, args.step_size/100)
 
     common_path = path.commonpath(args.window_coverage_bed)
 
