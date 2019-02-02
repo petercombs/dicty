@@ -55,9 +55,9 @@ def step_ceil(value, stepsize):
 if __name__ == "__main__":
     args = parse_args()
     gc = pd.read_table(args.gc_file, index_col=[0, 1, 2], names=GC_COLS, header=0)
-    gc_low = step_floor(gc.frac_gc.min(), args.step_size/100)
-    gc_high = step_ceil(gc.frac_gc.max(), args.step_size/100)
-    gc_steps = np.arange(gc_low, gc_high, args.step_size/100)
+    gc_low = step_floor(gc.frac_gc.min(), args.step_size / 100)
+    gc_high = step_ceil(gc.frac_gc.max(), args.step_size / 100)
+    gc_steps = np.arange(gc_low, gc_high, args.step_size / 100)
 
     common_path = path.commonprefix(args.window_coverage_bed)
 
@@ -77,7 +77,8 @@ if __name__ == "__main__":
 
         figure(1)
         subplot(2, 1, 1)
-        plotname = path.dirname(cov_file).replace(common_path, "")
+        plotname = cov_file.replace(common_path, "")
+        print(plotname)
         scatter(gc_cov.index * 100, y / y.mean(), label=plotname)
         figure()
         hlines(
