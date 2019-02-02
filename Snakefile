@@ -282,6 +282,7 @@ rule plot_gc_bias:
         "analysis/combined/gc_cov_normed.png"
     conda: "envs/dicty.yaml"
     shell: """
+    export MPLBACKEND=Agg
     python PlotGCBias.py {input.gc_file} {input.bedfiles}
     """
 
