@@ -75,6 +75,7 @@ rule all:
     input:
         'analysis/results/combined.all.tsv',
         'analysis/results/manhattan.png',
+        'analysis/combined/gc_cov_normed.png',
         expand('analysis/{sample}/scores.tsv',
                 sample=config['activesamples']+config['inactivesamples'],
         ),
@@ -270,6 +271,19 @@ rule plot_closest_mutants:
     shell: """
     export BACKEND=Agg
     python PlotClosestMutants.py"""
+
+rule plot_gc_bias:
+    input:
+        bedfiles = expand("analysis/combined/{subset}.1kb.bed",
+                subset=['neil','round1', 'round2']
+                    ),
+        gc_file = "Reference/dicty.1kb.gc.tsv"
+    output:
+        "analysis/combined/gc_cov_normed.png"
+    conda: "envs/dicty.yaml"
+    shell: """
+    python PlotGCBias.py {input.gc_file} {input.bedfiles}
+    """
 
 rule chrom_coords:
     input:
@@ -703,7 +717,7 @@ rule star_nowasp:
         --outSAMtype BAM SortedByCoordinate \
         --bamRemoveDuplicatesType UniqueIdentical \
         --outFilterMultimapNmax 1 \
-        --outSAMmultNmax 1 
+        --outSAMmultNmax 1
         """
 
 rule snps_vcf:
@@ -790,12 +804,28 @@ rule all_middle_seqs:
     output:
         touch("analysis/sentinels/all_middle_{n}")
 
+rule all_reads_in_group:
+    input:
+        lambda wildcards: expand("analysis/{sample}/{part}/mapped_hq_dedup.bam",
+                sample=config[wildcards.group],
+                part=['Stalk', 'Spore'],
+                )
+
+    output:
+        "analysis/combined/{group}.bam"
+    shell: """
+    module load samtools
+    samtools merge {output} {input}
+    """
+
 rule coverage_in_windows:
     input:
         bam="{sample}.bam",
         bed="Reference/dicty.{size}kb.bed",
     output:
         "{sample}.{size}kb.bed"
+    wildcard_constraints:
+        sample="^(?!Reference).*"
     shell: """
     module load bedtools bioawk
     bedtools coverage -a {input.bed} -b {input.bam} \
@@ -875,7 +905,7 @@ rule anycoverage_star_peaks:
     """
 
 rule bedgraphtobigwig:
-    input: 
+    input:
         bdg="{file}.bedgraph",
         genome="Reference/dicty.notrans.chroms.sizes"
     output:
@@ -919,6 +949,8 @@ rule gc_content:
     bedtools nuc -fi {input.fasta} -bed {input.bed} > {output}
 
     """
+
+ruleorder: genomic_windows > coverage_in_windows
 
 # Blast code
 
