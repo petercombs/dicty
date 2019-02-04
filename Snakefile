@@ -244,6 +244,7 @@ rule Santorelli_coordinate_translate:
     shell: """
     module load bedtools bioawk
     bioawk -t 'NR>1 {{split($3,a, ":"); print a[1], a[2], a[2]+1, $2}}' {input.santorelli} \
+        | sed 's/Chr/chr/' \
         | ./QuickTranslate -f 1 -t 0 {input.chrom_names} - - \
         | bedtools sort \
         > {output}
