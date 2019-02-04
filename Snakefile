@@ -75,6 +75,7 @@ rule all:
     input:
         'analysis/results/combined.all.tsv',
         'analysis/results/manhattan.png',
+        'analysis/combined/gc_cov_normed.png',
         expand('analysis/{sample}/scores.tsv',
                 sample=config['activesamples']+config['inactivesamples'],
         ),
@@ -243,6 +244,7 @@ rule Santorelli_coordinate_translate:
     shell: """
     module load bedtools bioawk
     bioawk -t 'NR>1 {{split($3,a, ":"); print a[1], a[2], a[2]+1, $2}}' {input.santorelli} \
+        | sed 's/Chr/chr/' \
         | ./QuickTranslate -f 1 -t 0 {input.chrom_names} - - \
         | bedtools sort \
         > {output}
@@ -268,8 +270,22 @@ rule plot_closest_mutants:
         "analysis/results/mutant_distance.png"
     conda: "envs/dicty.yaml"
     shell: """
-    export BACKEND=Agg
+    export MPLBACKEND=Agg
     python PlotClosestMutants.py"""
+
+rule plot_gc_bias:
+    input:
+        bedfiles = expand("analysis/combined/{subset}.1kb.bed",
+                subset=['neil','round1', 'round2']
+                    ),
+        gc_file = "Reference/dicty.1kb.gc.tsv"
+    output:
+        "analysis/combined/gc_cov_normed.png"
+    conda: "envs/dicty.yaml"
+    shell: """
+    export MPLBACKEND=Agg
+    python PlotGCBias.py {input.gc_file} {input.bedfiles}
+    """
 
 rule chrom_coords:
     input:
@@ -332,7 +348,7 @@ rule gene_expression_near_snps:
         "analysis/results/snps_genexpr/{part}_1.png"
     conda: "envs/dicty.yaml"
     shell: """
-    export BACKEND=Agg
+    export MPLBACKEND=Agg
     python PlotGenesNearSNPs.py --outdir analysis/results/snps_genexpr {input.snps}
     """
 
@@ -453,6 +469,18 @@ rule all_reads:
                     sample=config['activesamples'], part=['Stalk', 'Spore']),
     output:
         "analysis/combined/all_reads.bam"
+    shell: """module load samtools
+    samtools merge -l 9 {output} {input}
+    """
+
+
+rule all_reads_by_group:
+    input:
+        dir="analysis/combined/{group}/exists",
+        bam=lambda wildcards: expand("analysis/{sample}/{part}/mapped_hq_dedup.bam",
+                    sample=config[wildcards.group], part=['Stalk', 'Spore']),
+    output:
+        "analysis/combined/{group}/all_reads.bam"
     shell: """module load samtools
     samtools merge -l 9 {output} {input}
     """
@@ -691,7 +719,7 @@ rule star_nowasp:
         --outSAMtype BAM SortedByCoordinate \
         --bamRemoveDuplicatesType UniqueIdentical \
         --outFilterMultimapNmax 1 \
-        --outSAMmultNmax 1 
+        --outSAMmultNmax 1
         """
 
 rule snps_vcf:
@@ -778,6 +806,35 @@ rule all_middle_seqs:
     output:
         touch("analysis/sentinels/all_middle_{n}")
 
+rule all_reads_in_group:
+    input:
+        lambda wildcards: expand("analysis/{sample}/{part}/mapped_hq_dedup.bam",
+                sample=config[wildcards.group],
+                part=['Stalk', 'Spore'],
+                )
+
+    output:
+        "analysis/combined/{group}.bam"
+    shell: """
+    module load samtools
+    samtools merge {output} {input}
+    """
+
+rule coverage_in_windows:
+    input:
+        bam="{sample}.bam",
+        bed="Reference/dicty.{size}kb.bed",
+    output:
+        "{sample}.{size}kb.bed"
+    wildcard_constraints:
+        sample="^(?!Reference).*"
+    shell: """
+    module load bedtools bioawk
+    bedtools coverage -a {input.bed} -b {input.bam} \
+    | bioawk -t '{{print $1,$2,$3,$4/$6}}' \
+    > {output}
+    """
+
 rule coverage_bedgraph:
     input:
         bam="{sample}.bam",
@@ -850,7 +907,7 @@ rule anycoverage_star_peaks:
     """
 
 rule bedgraphtobigwig:
-    input: 
+    input:
         bdg="{file}.bedgraph",
         genome="Reference/dicty.notrans.chroms.sizes"
     output:
@@ -894,6 +951,8 @@ rule gc_content:
     bedtools nuc -fi {input.fasta} -bed {input.bed} > {output}
 
     """
+
+ruleorder: genomic_windows > coverage_in_windows
 
 # Blast code
 
