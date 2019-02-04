@@ -270,7 +270,7 @@ rule plot_closest_mutants:
         "analysis/results/mutant_distance.png"
     conda: "envs/dicty.yaml"
     shell: """
-    export BACKEND=Agg
+    export MPLBACKEND=Agg
     python PlotClosestMutants.py"""
 
 rule plot_gc_bias:
@@ -348,7 +348,7 @@ rule gene_expression_near_snps:
         "analysis/results/snps_genexpr/{part}_1.png"
     conda: "envs/dicty.yaml"
     shell: """
-    export BACKEND=Agg
+    export MPLBACKEND=Agg
     python PlotGenesNearSNPs.py --outdir analysis/results/snps_genexpr {input.snps}
     """
 
