@@ -292,6 +292,7 @@ def make_ld_plot(
     type_scores,
     name,
     bin_size=1e3,
+    max_dist=1e5,
     new_figure=True,
     outdir="analysis/results",
     xmin=0,
@@ -313,7 +314,7 @@ def make_ld_plot(
         chr, pos = snp.split(":")
         pos = int(pos)
 
-        if last_chr == chr:
+        if last_chr == chr and (pos - last_pos) <= max_dist:
             dist_bin = int((pos - last_pos) // bin_size)
             bins[dist_bin].append((type_scores[last_snp], type_scores[snp]))
             pairs_by_dist[pos - last_pos].append(
@@ -336,7 +337,7 @@ def make_ld_plot(
     # corrs = corrs.dropna()
     is_good = counts > 10
     plot((corrs.index * bin_size)[is_good], corrs[is_good], label="Correlation")
-    xlim(xmin, xmax)
+    xlim(xmin, min(xmax, max_dist))
     ylim(-1, 1)
     outfile = path.join(outdir, "{}_ld.png".format(name))
     mpl.savefig(outfile)
