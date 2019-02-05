@@ -342,7 +342,7 @@ def make_ld_plot(
     outfile = path.join(outdir, "{}_ld.png".format(name))
     mpl.savefig(outfile)
     # counts.plot()
-    return corrs, counts
+    return corrs, counts, pairs_by_dist
 
 
 if __name__ == "__main__":
@@ -422,9 +422,9 @@ if __name__ == "__main__":
 
     make_manhattan_plot(combined_pvals_fwd, combined_pvals_rev, outdir=outdir)
 
-    make_ld_plot(combined_pvals_fwd, "Spore", outdir=outdir)
-    make_ld_plot(combined_pvals_rev, "Stalk", outdir=outdir)
-    make_ld_plot(combined_pvals_rand, "Random", outdir=outdir)
+    spore_ld_data = make_ld_plot(combined_pvals_fwd, "Spore", outdir=outdir)
+    stalk_ld_data = make_ld_plot(combined_pvals_rev, "Stalk", outdir=outdir)
+    random_ld_data = make_ld_plot(combined_pvals_rand, "Random", outdir=outdir)
 
     for i_name, i_dataset in (
         ("spore", combined_pvals_fwd),
