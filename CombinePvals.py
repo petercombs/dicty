@@ -1,10 +1,14 @@
-""" Combine pseudo p-values from stalks and spores
+""" Combine pseudo p-values from stalks and spores and do other analyses
 
 I am not putting too much stock in the FET p-values as meaningful, so instead I
 use a pseudo p-value, which just takes the rank in the list (normalized by the
 number of SNPs) and treats that as a p-value.  This automatically fulfills
 assumptions of Fisher's method, which assumes only that the p-values input are
 drawn from a uniform distribution.
+
+Once we have the combined p-values, we may as well do some first-round analyses
+(though probably I will later decide that it will make more sense to split the
+plotting out to its own script).
 """
 
 from os import path
