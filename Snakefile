@@ -56,7 +56,8 @@ def getreads(readnum):
                 ))
                     #print(globstr)
                     retfiles.update(glob(globstr))
-                except KeyError:
+                except (KeyError,TypeError) as err:
+                    #print('path4', err)
                     continue
 
             return sorted(retfiles)
@@ -299,12 +300,13 @@ rule plot_closest_mutants:
 rule plot_gc_bias:
     input:
         bedfiles = expand("analysis/combined/{subset}.1kb.bed",
-                subset=['neil','round1', 'round2']
+                subset=['neil','round1', 'round2', 'baym_standard', 'baym_cool', 'baym_tmac', 'baym_cool_tmac', 'nextflex']
                     ),
         gc_file = "Reference/dicty.1kb.gc.tsv"
     output:
         "analysis/combined/gc_cov_normed.png"
     conda: "envs/dicty.yaml"
+    priority: 50
     shell: """
     export MPLBACKEND=Agg
     python PlotGCBias.py {input.gc_file} {input.bedfiles}
