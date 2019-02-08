@@ -319,7 +319,7 @@ rule chrom_coords:
 
 rule reduce_vep_snps:
     input:
-        vcf="analysis/combined/autosome_snps.vep.vcf",
+        vcf="analysis/combined/all.snps.vep.vcf",
         exons="Reference/exons.gtf",
     output: "analysis/combined/autosome_snps.vep_reduced.bed"
     shell: """
@@ -599,6 +599,54 @@ rule variants_to_beds:
     shell: """
     python VCF_to_Bed.py {input.vcf} {output.snps} {output.indels}
     """
+
+rule bed_to_vep:
+    input:
+        tr_file="Reference/chrom_names.txt",
+        bed="{prefix}.bed",
+    output:
+        "{prefix}.vep",
+    shell:  """
+    cat {input.bed} \
+        | ./QuickTranslate --from 0 --to 1 {input.tr_file} - - \
+        | awk '{{gsub(/\|/, "/", $4); print $1, $2, $2, $4, "+",$1"_"$2"_"$4 }}' \
+        | grep -vP '^(M|1F|2F|3F|4F|5F|6F|BF|R)' \
+        > {output}
+    """
+
+rule make_vep_vcf:
+    input:
+        "analysis/combined/all.snps.vep"
+    output:
+        "analysis/combined/all.snps.vep.chr.vcf",
+        "analysis/combined/all.snps.vep.vcf_summary.html"
+    shell: """
+    echo `whoami`
+    docker run -i \
+        -u $UID \
+        -v $HOME/vep_data:/opt/vep/.vep \
+        -v $HOME/dicty/analysis/combined:/opt/data \
+        ensemblorg/ensembl-vep ./vep \
+        -i /opt/data/all.snps.vep \
+        --species "dictyostelium_discoideum" --cache \
+        --genomes protists.ensembl.org --cache_version 42 \
+        --vcf --force_overwrite \
+        --dir /opt/vep/.vep \
+        -o /opt/data/all.snps.vep.chr.vcf
+   chown `whoami` {output}
+"""
+
+rule vep_restore_coords:
+    input:
+        vcf="analysis/combined/all.snps.vep.chr.vcf",
+        chrom_names="Reference/chrom_names.txt",
+    output:
+        "analysis/combined/all.snps.vep.vcf"
+    shell: """
+    ./SingleTranslate -k 0 -f 1 -t 0 {input.chrom_names} {input.vcf} {output} 
+    """
+        #| python ExtractVEP.py -k 0 1 7  -p 7 -g Reference/exons.gtf \
+        #| bioawk -t '{{print $1,$2-1,$2,$3,"."}}'  \
 
 rule call_variants:
     input:
