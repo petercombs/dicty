@@ -34,6 +34,13 @@ GC_COLS = [
 COV_COLS = ["Chrom", "start", "stop", "cov"]
 
 
+def longest_common_suffix(list_of_strings):
+    reversed_strings = ["".join(s[::-1]) for s in list_of_strings]
+    reversed_lcs = path.commonprefix(reversed_strings)
+    lcs = "".join(reversed_lcs[::-1])
+    return lcs
+
+
 def parse_args():
     parser = ArgumentParser()
     parser.add_argument("--step-size", "-s", default=1.0, type=float)
@@ -60,6 +67,8 @@ if __name__ == "__main__":
     gc_steps = np.arange(gc_low, gc_high, args.step_size / 100)
 
     common_path = path.commonprefix(args.window_coverage_bed)
+    common_suffix = longest_common_suffix(args.window_coverage_bed)
+    print("---->", common_suffix)
 
     for cov_file in args.window_coverage_bed:
         outdir = path.dirname(cov_file)
@@ -75,11 +84,11 @@ if __name__ == "__main__":
 
         y = gc_cov / total_len
 
-        figure(1)
+        figure(1, figsize=(8, 6))
         subplot(2, 1, 1)
-        plotname = cov_file.replace(common_path, "")
+        plotname = cov_file.replace(common_path, "").replace(common_suffix, "")
         print(plotname)
-        scatter(gc_cov.index * 100, y / y.mean(), label=plotname)
+        scatter(gc_cov.index * 100, y / y.mean(), s=4, label=plotname)
         figure()
         hlines(
             1,
@@ -91,7 +100,7 @@ if __name__ == "__main__":
         scatter(gc_cov.index * 100, y / y.mean(), label=plotname)
         ylabel("Normed Coverage")
         xlabel("% GC")
-        savefig(path.join(outdir, "gc_cov_normed.png"))
+        savefig(path.join(outdir, "gc_cov_normed.png"), dpi=300)
 
     figure(1)
     hlines(
@@ -103,4 +112,4 @@ if __name__ == "__main__":
     hist(gc.frac_gc * 100, bins=gc_steps * 100)
     xlabel("% GC")
     ylabel("Density")
-    savefig(path.join(common_path, "gc_cov_normed.png"))
+    savefig(path.join(common_path, "gc_cov_normed.png"), dpi=300)
