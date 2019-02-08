@@ -51,6 +51,7 @@ def parse_args():
         " the parameters of the ancillary plots and want to see the"
         " results more quickly",
     )
+    parser.add_argument("--autosomes", nargs="*")
     parser.add_argument("scores", nargs="+")
 
     parsed_args = parser.parse_args()
@@ -163,14 +164,24 @@ def make_manhattan_plot(
     fname="manhattan",
     plot_bonferroni=True,
     label="-log10 p",
+    autosomes=[],
     violin=False,
 ):
+    spore_pvals = spore_pvals.sort_index()
+    stalk_pvals = stalk_pvals.sort_index()
     translator = {}
     if path.exists(translation):
         for line in open(translation):
             line = line.strip().split()
             translator[line[0]] = line[1]
-    chrom_of = [x.split(":")[0] for x in sorted(stalk_pvals.index)]
+    chrom_of = np.array([x.split(":")[0] for x in stalk_pvals.index])
+    if autosomes:
+        print("Before: ", len(spore_pvals))
+        on_autosome = [x in autosomes or translator[x] in autosomes for x in chrom_of]
+        spore_pvals = spore_pvals.ix[on_autosome]
+        stalk_pvals = stalk_pvals.ix[on_autosome]
+        chrom_of = chrom_of[on_autosome]
+        print("After: ", len(spore_pvals))
     chroms = sorted(set(chrom_of))
     reds = ["red", "darkred", "pink"]
     blues = ["blue", "darkblue", "lightblue"]

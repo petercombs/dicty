@@ -129,7 +129,30 @@ rule fisher_pvalues:
     conda: "envs/dicty.yaml"
     shell: """
     export MPLBACKEND=Agg
-    python CombinePvals.py --output-prefix analysis/results/combined {input.scores}
+    python CombinePvals.py \
+        --autosomes 1 2 3 4 5 6 \
+        --output-prefix analysis/results/combined \
+        {input.scores}
+    """
+
+rule subset_fisher_pvalues:
+    input:
+        dir='analysis/{group}/exists',
+        scores=lambda wildcards: expand("analysis/{sample}/scores.tsv", sample=config[wildcards.group]),
+        code="CombinePvals.py"
+    output:
+        'analysis/{group}/combined.all.tsv',
+        'analysis/{group}/combined.Stalk.tsv',
+        'analysis/{group}/combined.Spore.tsv',
+        'analysis/{group}/combined.Random.tsv',
+        'analysis/{group}/manhattan.png',
+    conda: "envs/dicty.yaml"
+    shell: """
+    export MPLBACKEND=Agg
+    python CombinePvals.py \
+        --autosomes 1 2 3 4 5 6 \
+        --output-prefix analysis/{wildcards.group}/combined \
+        {input.scores}
     """
 
 rule VEP_overlap:
