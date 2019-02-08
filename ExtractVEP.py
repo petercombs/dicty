@@ -38,7 +38,7 @@ def parse_args():
             )
             for id in annotation.values():
                 keep_dict[id] = True
-    args.keep_only_genes_in_gtf = keep_dict
+        args.keep_only_genes_in_gtf = keep_dict
 
     return args
 
@@ -73,6 +73,8 @@ DISTANCE_ELEMENT = 18
 if __name__ == "__main__":
     args = parse_args()
     for line in stdin:
+        if line.startswith("#"):
+            continue
         data = line.split("\t")
         try:
             annotation = dict(

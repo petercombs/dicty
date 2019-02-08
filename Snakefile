@@ -56,7 +56,8 @@ def getreads(readnum):
                 ))
                     #print(globstr)
                     retfiles.update(glob(globstr))
-                except KeyError:
+                except (KeyError,TypeError) as err:
+                    #print('path4', err)
                     continue
 
             return sorted(retfiles)
@@ -129,7 +130,30 @@ rule fisher_pvalues:
     conda: "envs/dicty.yaml"
     shell: """
     export MPLBACKEND=Agg
-    python CombinePvals.py --output-prefix analysis/results/combined {input.scores}
+    python CombinePvals.py \
+        --autosomes 1 2 3 4 5 6 \
+        --output-prefix analysis/results/combined \
+        {input.scores}
+    """
+
+rule subset_fisher_pvalues:
+    input:
+        dir='analysis/{group}/exists',
+        scores=lambda wildcards: expand("analysis/{sample}/scores.tsv", sample=config[wildcards.group]),
+        code="CombinePvals.py"
+    output:
+        'analysis/{group}/combined.all.tsv',
+        'analysis/{group}/combined.Stalk.tsv',
+        'analysis/{group}/combined.Spore.tsv',
+        'analysis/{group}/combined.Random.tsv',
+        'analysis/{group}/manhattan.png',
+    conda: "envs/dicty.yaml"
+    shell: """
+    export MPLBACKEND=Agg
+    python CombinePvals.py \
+        --autosomes 1 2 3 4 5 6 \
+        --output-prefix analysis/{wildcards.group}/combined \
+        {input.scores}
     """
 
 rule VEP_overlap:
@@ -276,12 +300,13 @@ rule plot_closest_mutants:
 rule plot_gc_bias:
     input:
         bedfiles = expand("analysis/combined/{subset}.1kb.bed",
-                subset=['neil','round1', 'round2']
+                subset=['neil','round1', 'round2', 'baym_standard', 'baym_cool', 'baym_tmac', 'baym_cool_tmac', 'nextflex']
                     ),
         gc_file = "Reference/dicty.1kb.gc.tsv"
     output:
         "analysis/combined/gc_cov_normed.png"
     conda: "envs/dicty.yaml"
+    priority: 50
     shell: """
     export MPLBACKEND=Agg
     python PlotGCBias.py {input.gc_file} {input.bedfiles}
@@ -296,7 +321,7 @@ rule chrom_coords:
 
 rule reduce_vep_snps:
     input:
-        vcf="analysis/combined/autosome_snps.vep.vcf",
+        vcf="analysis/combined/all.snps.vep.vcf",
         exons="Reference/exons.gtf",
     output: "analysis/combined/autosome_snps.vep_reduced.bed"
     shell: """
@@ -453,7 +478,7 @@ rule dedup:
 
 rule mono_mappers:
     input:
-        sentinel="analysis/sentinels/monomap",
+        sentinel="analysis/sentinels/remonomap",
         bam="{sample}.bam",
     output: "{sample}_monomap.bam"
     conda: "envs/dicty.yaml"
@@ -576,6 +601,54 @@ rule variants_to_beds:
     shell: """
     python VCF_to_Bed.py {input.vcf} {output.snps} {output.indels}
     """
+
+rule bed_to_vep:
+    input:
+        tr_file="Reference/chrom_names.txt",
+        bed="{prefix}.bed",
+    output:
+        "{prefix}.vep",
+    shell:  """
+    cat {input.bed} \
+        | ./QuickTranslate --from 0 --to 1 {input.tr_file} - - \
+        | awk '{{gsub(/\|/, "/", $4); print $1, $2, $2, $4, "+",$1"_"$2"_"$4 }}' \
+        | grep -vP '^(M|1F|2F|3F|4F|5F|6F|BF|R)' \
+        > {output}
+    """
+
+rule make_vep_vcf:
+    input:
+        "analysis/combined/all.snps.vep"
+    output:
+        "analysis/combined/all.snps.vep.chr.vcf",
+        "analysis/combined/all.snps.vep.vcf_summary.html"
+    shell: """
+    echo `whoami`
+    docker run -i \
+        -u $UID \
+        -v $HOME/vep_data:/opt/vep/.vep \
+        -v $HOME/dicty/analysis/combined:/opt/data \
+        ensemblorg/ensembl-vep ./vep \
+        -i /opt/data/all.snps.vep \
+        --species "dictyostelium_discoideum" --cache \
+        --genomes protists.ensembl.org --cache_version 42 \
+        --vcf --force_overwrite \
+        --dir /opt/vep/.vep \
+        -o /opt/data/all.snps.vep.chr.vcf
+   chown `whoami` {output}
+"""
+
+rule vep_restore_coords:
+    input:
+        vcf="analysis/combined/all.snps.vep.chr.vcf",
+        chrom_names="Reference/chrom_names.txt",
+    output:
+        "analysis/combined/all.snps.vep.vcf"
+    shell: """
+    ./SingleTranslate -k 0 -f 1 -t 0 {input.chrom_names} {input.vcf} {output} 
+    """
+        #| python ExtractVEP.py -k 0 1 7  -p 7 -g Reference/exons.gtf \
+        #| bioawk -t '{{print $1,$2-1,$2,$3,"."}}'  \
 
 rule call_variants:
     input:
@@ -998,6 +1071,7 @@ rule blast_contamination:
     output:
         "{sample}/blastout.tsv",
     threads: 20
+    priority: -1
     shell: """
     {module}
     module load blast

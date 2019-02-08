@@ -26,6 +26,8 @@ from matplotlib.pyplot import (
     yticks,
     plot,
     scatter,
+    subplot2grid,
+    violinplot,
     xlabel,
     ylabel,
     legend,
@@ -53,6 +55,7 @@ def parse_args():
         " the parameters of the ancillary plots and want to see the"
         " results more quickly",
     )
+    parser.add_argument("--autosomes", nargs="*")
     parser.add_argument("scores", nargs="+")
 
     parsed_args = parser.parse_args()
@@ -70,9 +73,19 @@ def load_data(filenames):
 
     all_stalk_freqs = []
     all_spore_freqs = []
+    stalk_depth = None
+    spore_depth = None
 
+    print("Processing input files")
     for file in tqdm(filenames):
         fet_file = pd.read_table(file, squeeze=True, index_col=0)
+        if stalk_depth is None:
+            stalk_depth = fet_file.stalk_alt + fet_file.stalk_ref
+            spore_depth = fet_file.spore_alt + fet_file.spore_ref
+        else:
+            stalk_depth += fet_file.stalk_alt + fet_file.stalk_ref
+            spore_depth += fet_file.spore_alt + fet_file.spore_ref
+
         fet_data[file] = fet_file.sort_index()
         good_snps = isfinite(fet_file["rank"]) & (fet_file["rank"] >= 0)
         fet_file = fet_file.loc[good_snps]
@@ -107,6 +120,8 @@ def load_data(filenames):
         pvals_to_combine_rand,
         all_stalk_freqs,
         all_spore_freqs,
+        pd.Series(stalk_depth),
+        pd.Series(spore_depth),
         any_good_snps,
         fet_data,
     )
@@ -150,13 +165,27 @@ def make_manhattan_plot(
     stalk_pvals,
     outdir="analysis/results",
     translation="Reference/chrom_names.txt",
+    fname="manhattan",
+    plot_bonferroni=True,
+    label="-log10 p",
+    autosomes=[],
+    violin=False,
 ):
+    spore_pvals = spore_pvals.sort_index()
+    stalk_pvals = stalk_pvals.sort_index()
     translator = {}
     if path.exists(translation):
         for line in open(translation):
             line = line.strip().split()
             translator[line[0]] = line[1]
-    chrom_of = [x.split(":")[0] for x in sorted(stalk_pvals.index)]
+    chrom_of = np.array([x.split(":")[0] for x in stalk_pvals.index])
+    if autosomes:
+        print("Before: ", len(spore_pvals))
+        on_autosome = [x in autosomes or translator[x] in autosomes for x in chrom_of]
+        spore_pvals = spore_pvals.ix[on_autosome]
+        stalk_pvals = stalk_pvals.ix[on_autosome]
+        chrom_of = chrom_of[on_autosome]
+        print("After: ", len(spore_pvals))
     chroms = sorted(set(chrom_of))
     reds = ["red", "darkred", "pink"]
     blues = ["blue", "darkblue", "lightblue"]
@@ -172,6 +201,8 @@ def make_manhattan_plot(
     }
 
     mpl.figure()
+    if violin:
+        subplot2grid((1, 5), (0, 0), colspan=4)
     mpl.scatter(
         x,
         -log10(spore_pvals.sort_index()),
@@ -186,21 +217,41 @@ def make_manhattan_plot(
         c=[chroms_colors_blue[ix] for ix in chrom_of],
         **plot_kwargs,
     )
-    mpl.hlines(
-        [log10(.05 / len(x)), -log10(.05 / len(x))],
-        0,
-        len(x),
-        "k",
-        linestyles="dashed",
-        lw=.5,
-    )
+    if plot_bonferroni:
+        mpl.hlines(
+            [log10(.05 / len(x)), -log10(.05 / len(x))],
+            0,
+            len(x),
+            "k",
+            linestyles="dashed",
+            lw=.5,
+        )
     ticks = yticks()[0]
     yticks(ticks, np.abs(ticks))
     xticks(*zip(*chrom_midpoints.items()), rotation=90)
-    ylabel("-log10 p")
+    ylabel(label)
     mpl.legend(loc="lower left", bbox_to_anchor=(0.8, 1.0))
+
+    if violin:
+        subplot2grid((1, 5), (0, 4))
+        result = violinplot(
+            list(filter(isfinite, -log10(spore_pvals))),
+            showextrema=False,
+            showmedians=True,
+        )
+        for body in result["bodies"]:
+            body.set_color("r")
+        result = violinplot(
+            list(filter(isfinite, log10(stalk_pvals))),
+            showextrema=False,
+            showmedians=True,
+        )
+        for body in result["bodies"]:
+            body.set_color("b")
+        xticks([])
+
     mpl.tight_layout()
-    mpl.savefig(path.join(outdir, "manhattan.png"), dpi=900)
+    mpl.savefig(path.join(outdir, fname), dpi=900)
 
 
 def make_tehranchigram(
@@ -355,6 +406,8 @@ if __name__ == "__main__":
         pvals_to_combine_rand,
         all_stalk_freqs,
         all_spore_freqs,
+        stalk_depth,
+        spore_depth,
         any_good_snps,
         fet_data,
     ) = load_data(args.scores)
@@ -420,7 +473,20 @@ if __name__ == "__main__":
 
     make_tehranchigram(all_stalk_freqs, all_spore_freqs)
 
-    make_manhattan_plot(combined_pvals_fwd, combined_pvals_rev, outdir=outdir)
+    make_manhattan_plot(
+        combined_pvals_fwd, combined_pvals_rev, outdir=outdir, autosomes=args.autosomes
+    )
+
+    make_manhattan_plot(
+        stalk_depth,
+        spore_depth,
+        outdir=outdir,
+        label="-log10 coverage",
+        fname="coverage",
+        plot_bonferroni=False,
+        autosomes=args.autosomes,
+        violin=True,
+    )
 
     spore_ld_data = make_ld_plot(combined_pvals_fwd, "Spore", outdir=outdir)
     stalk_ld_data = make_ld_plot(combined_pvals_rev, "Stalk", outdir=outdir)
