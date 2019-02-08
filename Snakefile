@@ -478,7 +478,7 @@ rule dedup:
 
 rule mono_mappers:
     input:
-        sentinel="analysis/sentinels/monomap",
+        sentinel="analysis/sentinels/remonomap",
         bam="{sample}.bam",
     output: "{sample}_monomap.bam"
     conda: "envs/dicty.yaml"
