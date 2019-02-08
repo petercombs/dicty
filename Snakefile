@@ -1071,6 +1071,7 @@ rule blast_contamination:
     output:
         "{sample}/blastout.tsv",
     threads: 20
+    priority: -1
     shell: """
     {module}
     module load blast
