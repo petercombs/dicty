@@ -328,7 +328,7 @@ rule reduce_vep_snps:
     module load bioawk
     grep -v "##" {input.vcf} \
         | python ExtractVEP.py --promoter-range {promoter_size} -k 0 1 7 -p 7 -g {input.exons} \
-        | bioawk -t '{{print $1,$2-1,$2,$3,"."}}'  \
+        | bioawk -t '{{print $1,$2,$2+1,$3,"."}}'  \
         > {output}
         """
 
