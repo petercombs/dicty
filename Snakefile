@@ -621,7 +621,7 @@ rule make_vep_vcf:
         "analysis/combined/all.snps.vep"
     output:
         "analysis/combined/all.snps.vep.chr.vcf",
-        "analysis/combined/all.snps.vep.vcf_summary.html"
+        "analysis/combined/all.snps.vep.chr.vcf_summary.html"
     shell: """
     echo `whoami`
     docker run -i \
