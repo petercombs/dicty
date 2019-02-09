@@ -380,6 +380,8 @@ if __name__ == "__main__":
         {
             "spore": combined_pvals_fwd,
             "stalk": combined_pvals_rev,
+            "stalk_depth": stalk_depth[combined_pvals_fwd.index],
+            "spore_depth": spore_depth[combined_pvals_fwd.index],
             "num_snps": any_good_snps,
         }
     )
