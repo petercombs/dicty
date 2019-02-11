@@ -419,8 +419,8 @@ if __name__ == "__main__":
     )
 
     make_manhattan_plot(
-        stalk_depth,
         spore_depth,
+        stalk_depth,
         outdir=outdir,
         label="-log10 coverage",
         fname="coverage",
