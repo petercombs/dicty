@@ -37,7 +37,11 @@ if __name__ == "__main__":
     pval_table_orig = pval_table.copy()
     pval_table = pval_table.loc[pval_table.num_snps > args.min_samples]
 
-    outdir = path.dirname(args.output_prefix)
+    outdir = (
+        args.output_prefix
+        if path.isdir(args.output_prefix)
+        else path.dirname(args.output_prefix)
+    )
 
     translator = {}
     translation = "Reference/chrom_names.txt"
@@ -51,8 +55,13 @@ if __name__ == "__main__":
     combined_pvals_spore = pval_table.spore
     combined_pvals_rand = pval_table.random
 
-    stalk_depth = pval_table.stalk_depth
-    spore_depth = pval_table.spore_depth
+    stalk_ref_depth = pval_table.stalk_ref_depth
+    spore_ref_depth = pval_table.spore_ref_depth
+    stalk_alt_depth = pval_table.stalk_alt_depth
+    spore_alt_depth = pval_table.spore_alt_depth
+
+    stalk_depth = stalk_ref_depth + stalk_alt_depth
+    spore_depth = spore_ref_depth + spore_alt_depth
 
     chrom_of = np.array([x.split(":")[0] for x in pval_table_orig.index])
 
@@ -103,7 +112,7 @@ if __name__ == "__main__":
         spore_depth,
         stalk_depth,
         outdir=outdir,
-        label="-log10 coverage",
+        label="log10 coverage",
         fname="coverage",
         plot_bonferroni=False,
         autosomes=args.autosomes,

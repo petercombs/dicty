@@ -126,7 +126,7 @@ rule fisher_pvalues:
         'analysis/results/combined.Stalk.tsv',
         'analysis/results/combined.Spore.tsv',
         'analysis/results/combined.Random.tsv',
-        'analysis/results/manhattan.png',
+        #'analysis/results/manhattan.png',
     conda: "envs/dicty.yaml"
     shell: """
     export MPLBACKEND=Agg
@@ -146,7 +146,6 @@ rule subset_fisher_pvalues:
         'analysis/{group}/combined.Stalk.tsv',
         'analysis/{group}/combined.Spore.tsv',
         'analysis/{group}/combined.Random.tsv',
-        'analysis/{group}/manhattan.png',
     conda: "envs/dicty.yaml"
     shell: """
     export MPLBACKEND=Agg
@@ -154,6 +153,23 @@ rule subset_fisher_pvalues:
         --autosomes 1 2 3 4 5 6 \
         --output-prefix analysis/{wildcards.group}/combined \
         {input.scores}
+    """
+
+rule pval_plots:
+    input:
+        scores='{dir}/combined.all.tsv',
+        translation='Reference/chrom_names.txt',
+    output:
+        '{dir}/manhattan.png',
+        '{dir}/combined_pvals_spore_and_stalk.png',
+    conda: "envs/dicty.yaml"
+    shell: """
+    export MPLBACKEND=Agg
+    python PlotCombinedPvals.py \
+        --autosomes 1 2 3 4 5 6 \
+        --translation {input.translation} \
+        --output-prefix {wildcards.dir}/ \
+        -- {input.scores}
     """
 
 rule VEP_overlap:
@@ -642,7 +658,7 @@ rule make_vep_vcf:
     docker run -i \
         -u $UID \
         -v $HOME/vep_data:/opt/vep/.vep \
-        -v $HOME/dicty/analysis/combined:/opt/data \
+        -v $PWD/analysis/combined:/opt/data \
         ensemblorg/ensembl-vep ./vep \
         -i /opt/data/all.snps.vep \
         --species "dictyostelium_discoideum" --cache \
@@ -650,7 +666,6 @@ rule make_vep_vcf:
         --vcf --force_overwrite \
         --dir /opt/vep/.vep \
         -o /opt/data/all.snps.vep.chr.vcf
-   chown `whoami` {output}
 """
 
 rule vep_restore_coords:
@@ -660,7 +675,7 @@ rule vep_restore_coords:
     output:
         "analysis/combined/all.snps.vep.vcf"
     shell: """
-    ./SingleTranslate -k 0 -f 1 -t 0 {input.chrom_names} {input.vcf} {output} 
+    ./SingleTranslate -k 0 -f 1 -t 0 {input.chrom_names} {input.vcf} {output}
     """
         #| python ExtractVEP.py -k 0 1 7  -p 7 -g Reference/exons.gtf \
         #| bioawk -t '{{print $1,$2-1,$2,$3,"."}}'  \
@@ -893,6 +908,13 @@ rule all_middle_seqs:
                 part=['Stalk', 'Spore'])
     output:
         touch("analysis/sentinels/all_middle_{n}")
+
+rule all_coverage_bigwigs:
+    input:
+        expand("analysis/{sample}/{part}/mapped_hq_dedup.cov.bw",
+                sample=config['activesamples'], part=['Stalk', 'Spore'])
+    output:
+        touch("analysis/sentinels/all_coverage_bigwigs")
 
 rule all_reads_in_group:
     input:
