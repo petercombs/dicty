@@ -486,7 +486,7 @@ if __name__ == "__main__":
         spore_ref_depth + spore_alt_depth,
         stalk_ref_depth + stalk_alt_depth,
         outdir=outdir,
-        label="-log10 coverage",
+        label="log10 coverage",
         fname="coverage",
         plot_bonferroni=False,
         autosomes=args.autosomes,
