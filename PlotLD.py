@@ -19,7 +19,7 @@ def make_ld_plot(
     we're looking at. Flowers et al 2010 implies it should be small, but we
     don't really know until we try it.
     """
-    type_scores = pd.np.log10(type_scores.sort_index())
+    type_scores = type_scores.sort_index()
     bins = defaultdict(list)
     pairs_by_dist = defaultdict(list)
     last_snp = ""
@@ -39,7 +39,7 @@ def make_ld_plot(
         last_snp = snp
         last_chr = chr
         last_pos = pos
-    corrs = pd.Series(index=bins.keys(), data=nan).sort_index()
+    corrs = pd.Series(index=bins.keys(), data=np.nan).sort_index()
     counts = pd.Series(index=bins.keys(), data=-1).sort_index()
 
     for bin, pvals in bins.items():
