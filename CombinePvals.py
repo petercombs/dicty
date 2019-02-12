@@ -17,6 +17,7 @@ from multiprocessing import Pool
 from collections import defaultdict
 import pandas as pd
 import numpy as np
+import itertools as it
 from numpy import arange, log10, nan, ceil, sqrt, isfinite
 from scipy.stats import combine_pvalues, spearmanr
 from matplotlib.pyplot import (
@@ -38,6 +39,7 @@ from matplotlib.pyplot import (
     hist2d,
 )
 import matplotlib.pyplot as mpl
+import pickle as pkl
 from numpy.random import shuffle, rand
 from tqdm import tqdm
 
@@ -71,20 +73,26 @@ def load_data(filenames):
 
     fet_data = {}
 
-    all_stalk_freqs = []
-    all_spore_freqs = []
-    stalk_depth = None
-    spore_depth = None
+    all_stalk_freqs = defaultdict(list)
+    all_spore_freqs = defaultdict(list)
+    stalk_ref_depth = None
+    spore_ref_depth = None
+    stalk_alt_depth = None
+    spore_alt_depth = None
 
     print("Processing input files")
     for file in tqdm(filenames):
         fet_file = pd.read_table(file, squeeze=True, index_col=0)
-        if stalk_depth is None:
-            stalk_depth = fet_file.stalk_alt + fet_file.stalk_ref
-            spore_depth = fet_file.spore_alt + fet_file.spore_ref
+        if stalk_ref_depth is None:
+            stalk_ref_depth = fet_file.stalk_ref
+            spore_ref_depth = fet_file.spore_ref
+            stalk_alt_depth = fet_file.stalk_alt
+            spore_alt_depth = fet_file.spore_alt
         else:
-            stalk_depth += fet_file.stalk_alt + fet_file.stalk_ref
-            spore_depth += fet_file.spore_alt + fet_file.spore_ref
+            stalk_ref_depth += fet_file.stalk_ref
+            spore_ref_depth += fet_file.spore_ref
+            stalk_alt_depth += fet_file.stalk_alt
+            spore_alt_depth += fet_file.spore_alt
 
         fet_data[file] = fet_file.sort_index()
         good_snps = isfinite(fet_file["rank"]) & (fet_file["rank"] >= 0)
@@ -96,8 +104,10 @@ def load_data(filenames):
             any_good_snps = good_snps * 0
         any_good_snps += good_snps
 
-        all_stalk_freqs.extend(fet_file.loc[great_snps, "stalk_ratio"])
-        all_spore_freqs.extend(fet_file.loc[great_snps, "spore_ratio"])
+        for ix in fet_file.loc[great_snps].index:
+            chr = ix.split(":")[0]
+            all_stalk_freqs[chr].append(fet_file.loc[ix, "stalk_ratio"])
+            all_spore_freqs[chr].append(fet_file.loc[ix, "spore_ratio"])
 
         semi_ps = fet_file["rank"] / fet_file.maxrank
 
@@ -120,8 +130,10 @@ def load_data(filenames):
         pvals_to_combine_rand,
         all_stalk_freqs,
         all_spore_freqs,
-        pd.Series(stalk_depth),
-        pd.Series(spore_depth),
+        pd.Series(stalk_ref_depth),
+        pd.Series(spore_ref_depth),
+        pd.Series(stalk_alt_depth),
+        pd.Series(spore_alt_depth),
         any_good_snps,
         fet_data,
     )
@@ -136,7 +148,12 @@ def combine_all_pvals(table, indices):
     return out
 
 
-def make_qq_plot(combined_pvals_spore, combined_pvals_stalk, combined_pvals_rand):
+def make_qq_plot(
+    combined_pvals_spore,
+    combined_pvals_stalk,
+    combined_pvals_rand,
+    outdir="analysis/results/",
+):
     figure()
     scatter(
         -log10(combined_pvals_rand),
@@ -255,13 +272,21 @@ def make_manhattan_plot(
 
 
 def make_tehranchigram(
-    all_stalk_freqs, all_spore_freqs, vmax=None, outdir="analysis/results"
+    all_stalk_freqs,
+    all_spore_freqs,
+    vmax=None,
+    outdir="analysis/results",
+    fname="all_prepost",
 ):
     """Pre vs post plot
 
     Of course, in this case, neither one is obviously pre or post-treatment, but
     the point stands.
     """
+    if isinstance(all_stalk_freqs, dict):
+        all_stalk_freqs = list(it.chain(*all_stalk_freqs.values()))
+    if isinstance(all_spore_freqs, dict):
+        all_spore_freqs = list(it.chain(*all_spore_freqs.values()))
     figure()
     x = pd.Series(all_stalk_freqs)
     y = pd.Series(all_spore_freqs)
@@ -274,7 +299,7 @@ def make_tehranchigram(
     xlabel("Stalk Frequency")
     ylabel("Spore Frequency")
     mpl.colorbar()
-    mpl.savefig(path.join(outdir, "all_prepost.png"))
+    mpl.savefig(path.join(outdir, fname))
     close()
 
 
@@ -406,8 +431,10 @@ if __name__ == "__main__":
         pvals_to_combine_rand,
         all_stalk_freqs,
         all_spore_freqs,
-        stalk_depth,
-        spore_depth,
+        stalk_ref_depth,
+        spore_ref_depth,
+        stalk_alt_depth,
+        spore_alt_depth,
         any_good_snps,
         fet_data,
     ) = load_data(args.scores)
@@ -441,11 +468,15 @@ if __name__ == "__main__":
         {
             "spore": combined_pvals_fwd,
             "stalk": combined_pvals_rev,
-            "stalk_depth": stalk_depth[combined_pvals_fwd.index],
-            "spore_depth": spore_depth[combined_pvals_fwd.index],
+            "random": combined_pvals_rand,
+            "stalk_ref_depth": stalk_ref_depth[combined_pvals_fwd.index],
+            "spore_ref_depth": spore_ref_depth[combined_pvals_fwd.index],
+            "stalk_alt_depth": stalk_alt_depth[combined_pvals_fwd.index],
+            "spore_alt_depth": spore_alt_depth[combined_pvals_fwd.index],
             "num_snps": any_good_snps,
         }
     )
+
     out_table.sort_values(by="num_snps", inplace=True)
     out_table.to_csv(args.output_prefix + ".all.tsv", sep="\t")
 
@@ -471,17 +502,48 @@ if __name__ == "__main__":
         )
     )
 
+    translator = {}
+    translation = "Reference/chrom_names.txt"
+
+    if path.exists(translation):
+        for line in open(translation):
+            line = line.strip().split()
+            translator[line[0]] = line[1]
+    chrom_of = np.array([x.split(":")[0] for x in combined_pvals_fwd.index])
+
+    autosomes = args.autosomes
+    if args.autosomes:
+        on_autosome = [
+            ix
+            for ix, x in zip(combined_pvals_fwd.index, chrom_of)
+            if x in autosomes or translator[x] in autosomes
+        ]
+        combined_pvals_fwd = combined_pvals_fwd.loc[on_autosome]
+        combined_pvals_rev = combined_pvals_rev.loc[on_autosome]
+        combined_pvals_rand = combined_pvals_rand.loc[on_autosome]
     make_qq_plot(combined_pvals_fwd, combined_pvals_rev, combined_pvals_rand)
 
     make_tehranchigram(all_stalk_freqs, all_spore_freqs)
+
+    all_autosomes = [
+        *args.autosomes,
+        *[key for key, value in translator.items() if value in autosomes],
+    ]
+
+    make_tehranchigram(
+        {chrom: all_stalk_freqs[chrom] for chrom in all_autosomes},
+        {chrom: all_spore_freqs[chrom] for chrom in all_autosomes},
+        outdir=outdir,
+        fname="autosome_prepost",
+    )
 
     make_manhattan_plot(
         combined_pvals_fwd, combined_pvals_rev, outdir=outdir, autosomes=args.autosomes
     )
 
     make_manhattan_plot(
-        stalk_depth,
-        spore_depth,
+        spore_ref_depth + spore_alt_depth,
+        stalk_ref_depth + stalk_alt_depth,
         outdir=outdir,
         label="-log10 coverage",
         fname="coverage",

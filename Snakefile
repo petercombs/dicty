@@ -332,6 +332,21 @@ rule reduce_vep_snps:
         > {output}
         """
 
+rule split_vep_types:
+    input:
+        '{dir}/autosome_snps.vep_reduced.bed'
+    output:
+        noncoding='{dir}/autosome_noncoding.bed',
+        synonymous='{dir}/autosome_synonymous.bed',
+        nonsynonymous='{dir}/autosome_nonsynonymous.bed',
+        promoters='{dir}/autosome_promoters.bed',
+    shell: """
+    grep -P "(upstream_gene_variant|downstream_gene_variant|intron_variant)" {input} > {output.noncoding}
+    grep -P "(missense_variant|stop_gained|stop_lost)" {input} > {output.nonsynonymous}
+    grep "synonymous_variant" {input} > {output.synonymous}
+    grep "promoter_gene_variant" {input} > {output.promoters}
+    """
+
 rule scores_to_bed:
     input:
         pval_cutoff = 'params/pval_cutoff',
