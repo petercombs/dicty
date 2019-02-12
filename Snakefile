@@ -126,7 +126,7 @@ rule fisher_pvalues:
         'analysis/results/combined.Stalk.tsv',
         'analysis/results/combined.Spore.tsv',
         'analysis/results/combined.Random.tsv',
-        'analysis/results/manhattan.png',
+        #'analysis/results/manhattan.png',
     conda: "envs/dicty.yaml"
     shell: """
     export MPLBACKEND=Agg
@@ -146,7 +146,6 @@ rule subset_fisher_pvalues:
         'analysis/{group}/combined.Stalk.tsv',
         'analysis/{group}/combined.Spore.tsv',
         'analysis/{group}/combined.Random.tsv',
-        'analysis/{group}/manhattan.png',
     conda: "envs/dicty.yaml"
     shell: """
     export MPLBACKEND=Agg
@@ -154,6 +153,23 @@ rule subset_fisher_pvalues:
         --autosomes 1 2 3 4 5 6 \
         --output-prefix analysis/{wildcards.group}/combined \
         {input.scores}
+    """
+
+rule pval_plots:
+    input:
+        scores='{dir}/combined.all.tsv',
+        translation='Reference/chrom_names.txt',
+    output:
+        '{dir}/manhattan.png',
+        '{dir}/combined_pvals_spore_and_stalk.png',
+    conda: "envs/dicty.yaml"
+    shell: """
+    export MPLBACKEND=Agg
+    python PlotCombinedPvals.py \
+        --autosomes 1 2 3 4 5 6 \
+        --translation {input.translation} \
+        --output-prefix {wildcards.dir}/ \
+        -- {input.scores}
     """
 
 rule VEP_overlap:
