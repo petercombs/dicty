@@ -676,7 +676,7 @@ rule vep_restore_coords:
     output:
         "analysis/combined/all.snps.vep.vcf"
     shell: """
-    ./SingleTranslate -k 0 -f 1 -t 0 {input.chrom_names} {input.vcf} {output} 
+    ./SingleTranslate -k 0 -f 1 -t 0 {input.chrom_names} {input.vcf} {output}
     """
         #| python ExtractVEP.py -k 0 1 7  -p 7 -g Reference/exons.gtf \
         #| bioawk -t '{{print $1,$2-1,$2,$3,"."}}'  \
