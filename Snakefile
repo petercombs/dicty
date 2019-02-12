@@ -910,6 +910,13 @@ rule all_middle_seqs:
     output:
         touch("analysis/sentinels/all_middle_{n}")
 
+rule all_coverage_bigwigs:
+    input:
+        expand("analysis/{sample}/{part}/mapped_hq_dedup.cov.bw",
+                sample=config['activesamples'], part=['Stalk', 'Spore'])
+    output:
+        touch("analysis/sentinels/all_coverage_bigwigs")
+
 rule all_reads_in_group:
     input:
         lambda wildcards: expand("analysis/{sample}/{part}/mapped_hq_dedup.bam",
