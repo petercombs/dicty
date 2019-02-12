@@ -34,6 +34,21 @@ samples:
     fake-Spore:
         R1s: [sequence/B_S2_L001_R1_001.fastq.gz, sequence/D_S4_L001_R1_001.fastq.gz, sequence/F_S6_L001_R1_001.fastq.gz, sequence/H_S8_L001_R1_001.fastq.gz,]
         R2s: [sequence/B_S2_L001_R2_001.fastq.gz, sequence/D_S4_L001_R2_001.fastq.gz, sequence/F_S6_L001_R2_001.fastq.gz, sequence/H_S8_L001_R2_001.fastq.gz,]
+
+    miseq-Stalk:
+        R1s: [sequence/Triparental/ERR2720963_1.fastq.gz, sequence/Triparental/ERR2720972_1.fastq.gz, sequence/Triparental/ERR2720973_1.fastq.gz]
+        R2s: [sequence/Triparental/ERR2720963_2.fastq.gz, sequence/Triparental/ERR2720972_2.fastq.gz, sequence/Triparental/ERR2720973_2.fastq.gz]
+    miseq-Spore:
+        R1s: [sequence/Triparental/ERR2720963_1.fastq.gz, sequence/Triparental/ERR2720972_1.fastq.gz, sequence/Triparental/ERR2720973_1.fastq.gz]
+        R2s: [sequence/Triparental/ERR2720963_2.fastq.gz, sequence/Triparental/ERR2720972_2.fastq.gz, sequence/Triparental/ERR2720973_2.fastq.gz]
+    hiseq-Stalk:
+        R1s: [sequence/Triparental/ERR2720965_1.fastq.gz, sequence/Triparental/ERR2720968_1.fastq.gz, sequence/Triparental/ERR2720969_1.fastq.gz, ]
+        R2s: [sequence/Triparental/ERR2720965_2.fastq.gz, sequence/Triparental/ERR2720968_2.fastq.gz, sequence/Triparental/ERR2720969_2.fastq.gz, ]
+    hiseq-Spore:
+        R1s: [sequence/Triparental/ERR2720965_1.fastq.gz, sequence/Triparental/ERR2720968_1.fastq.gz, sequence/Triparental/ERR2720969_1.fastq.gz, ]
+        R2s: [sequence/Triparental/ERR2720965_2.fastq.gz, sequence/Triparental/ERR2720968_2.fastq.gz, sequence/Triparental/ERR2720969_2.fastq.gz, ]
+
+
     P48-PB-F1-Stalk:
         i5: S502
         i7: N701
@@ -746,6 +761,10 @@ round1: [
     ]
 
 neil: [fake]
+
+miseq: [miseq]
+
+hiseq: [hiseq]
 
 nextera: [
     P63-amp1-F02, P63-amp1-F04, P63-amp1-F06, P63-carb1-F07, P63-carb1-F08,
