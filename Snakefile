@@ -642,7 +642,7 @@ rule make_vep_vcf:
     docker run -i \
         -u $UID \
         -v $HOME/vep_data:/opt/vep/.vep \
-        -v $HOME/dicty/analysis/combined:/opt/data \
+        -v $PWD/analysis/combined:/opt/data \
         ensemblorg/ensembl-vep ./vep \
         -i /opt/data/all.snps.vep \
         --species "dictyostelium_discoideum" --cache \
@@ -650,7 +650,6 @@ rule make_vep_vcf:
         --vcf --force_overwrite \
         --dir /opt/vep/.vep \
         -o /opt/data/all.snps.vep.chr.vcf
-   chown `whoami` {output}
 """
 
 rule vep_restore_coords:
