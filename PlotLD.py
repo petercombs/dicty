@@ -99,8 +99,8 @@ def plot_groupbins(pairs_by_dist, name, groupsize=50, outdir="analysis/results/"
 
     for k, v in sorted(pairs_by_dist.items()):
         np.random.shuffle(v)
-        while len(v) + len(latest_bin) > 200:
-            n = 200 - len(latest_bin)
+        while len(v) + len(latest_bin) > groupsize:
+            n = groupsize - len(latest_bin)
             latest_bin.extend(v[:n])
             v = v[n:]
             snp_bins.append(latest_bin)
@@ -110,7 +110,7 @@ def plot_groupbins(pairs_by_dist, name, groupsize=50, outdir="analysis/results/"
     snp_bins.append(latest_bin)
     bin_colors.append(k)
 
-    print(min(bin_colors), max(bin_colors))
+    # print(min(bin_colors), max(bin_colors))
     colorcycle = [
         "blue",
         "orange",
@@ -134,15 +134,18 @@ def plot_groupbins(pairs_by_dist, name, groupsize=50, outdir="analysis/results/"
     savefig(join(outdir, "{}_group{:03d}_hist.png".format(name, groupsize)))
     close()
     figure()
+    print(name, len(bin_colors))
     scatter(
-        np.arange(len(snp_bins)),
+        .1 * np.random.randn(len(bin_colors)) + bin_colors,
         [spearmanr(*zip(*snp_bin)).correlation for snp_bin in snp_bins],
         c=[cnames[i] for i in bin_colors],
         s=4,
     )
+    ylim(-0.1, 1)
 
     savefig(join(outdir, "{}_group{:03d}.png".format(name, groupsize)))
-    print(join(outdir, "{}_group{:03d}.png".format(name, groupsize)))
+    xlim(0, 500)
+    savefig(join(outdir, "{}_group{:03d}_narrow.png".format(name, groupsize)))
     close()
 
 
