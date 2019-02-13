@@ -262,6 +262,7 @@ def make_manhattan_plot(
         for body in result["bodies"]:
             body.set_color("b")
         xticks([])
+        yticks(ticks, np.abs(ticks))
 
     mpl.tight_layout()
     mpl.savefig(path.join(outdir, fname), dpi=900)
