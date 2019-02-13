@@ -4,14 +4,15 @@ import numpy as np
 import itertools as it
 from scipy.stats import spearmanr
 from os.path import basename, splitext, dirname, join
-from matplotlib.pyplot import figure, scatter, plot, savefig, close, xlim
+from matplotlib.pyplot import figure, scatter, plot, savefig, close, xlim, ylim
 from collections import defaultdict
+from tqdm import tqdm
 
 
 def make_ld_plot(
     type_scores,
     name,
-    bin_size=1e3,
+    bins=None,
     max_dist=1e5,
     new_figure=True,
     outdir="analysis/results",
@@ -24,8 +25,16 @@ def make_ld_plot(
     we're looking at. Flowers et al 2010 implies it should be small, but we
     don't really know until we try it.
     """
+    if isinstance(bins, int):
+        bins = linspace(0, max_dist, bins + 1)
+    elif isinstance(bins, float):
+        bins = arange(0, max_dist, bins)
+    elif np.iterable(bins):
+        bins = np.array(bins)
+    bins_left = bins[:-1]
+
     type_scores = type_scores.sort_index()
-    bins = defaultdict(list)
+    size_bins = defaultdict(list)
     pairs_by_dist = defaultdict(list)
     last_snp = ""
     last_chr = ""
@@ -35,8 +44,10 @@ def make_ld_plot(
         pos = int(pos)
 
         if last_chr == chr and (pos - last_pos) <= max_dist:
-            dist_bin = int((pos - last_pos) // bin_size)
-            bins[dist_bin].append((type_scores[last_snp], type_scores[snp]))
+            dist = pos - last_pos
+            size_bins[np.searchsorted(bins_left, dist)].append(
+                (type_scores[last_snp], type_scores[snp])
+            )
             pairs_by_dist[pos - last_pos].append(
                 (type_scores[last_snp], type_scores[snp])
             )
@@ -44,30 +55,41 @@ def make_ld_plot(
         last_snp = snp
         last_chr = chr
         last_pos = pos
-    corrs = pd.Series(index=bins.keys(), data=np.nan).sort_index()
-    counts = pd.Series(index=bins.keys(), data=-1).sort_index()
+    corrs = pd.Series(index=size_bins.keys(), data=np.nan).sort_index()
+    counts = pd.Series(index=size_bins.keys(), data=-1).sort_index()
 
-    for bin, pvals in bins.items():
+    for bin, pvals in size_bins.items():
         counts[bin] = len(pvals)
         if counts[bin] > 2:
             corrs[bin] = spearmanr(*zip(*pvals))[0]
 
     if new_figure:
         figure()
-    # corrs = corrs.dropna()
-    is_good = counts > 10
-    # plot((corrs.index * bin_size)[is_good], corrs[is_good], label="Correlation")
-    # xlim(xmin, min(xmax, max_dist))
-    # ylim(-1, 1)
-    # outfile = join(outdir, "{}_ld.png".format(name))
-    # mpl.savefig(outfile)
-    # counts.plot()
+    is_good = counts > 20
+    corrs = corrs.dropna()
+    plot_sizebins(
+        corrs[is_good],
+        bins[np.r_[is_good, True]],
+        name,
+        outdir=outdir,
+        max_dist=max_dist,
+        xmax=xmax,
+    )
     plot_groupbins(pairs_by_dist, name, outdir=outdir)
     return corrs, counts, pairs_by_dist
 
 
-def plot_sizebins():
-    pass
+def plot_sizebins(
+    good_corrs, bins, name, outdir="analysis/results/", max_dist=1e5, xmin=0, xmax=1e4
+):
+    figure()
+    plot((bins[:-1] + bins[1:]) / 2, good_corrs, label="Correlation")
+    xlim(xmin, min(xmax, max_dist))
+    ylim(-1, 1)
+    outfile = join(outdir, "{}_ld.png".format(name))
+    savefig(outfile)
+    close()
+    # counts.plot()
 
 
 def plot_groupbins(pairs_by_dist, name, groupsize=50, outdir="analysis/results/"):
@@ -137,14 +159,42 @@ def parse_args():
 
 if __name__ == "__main__":
     args = parse_args()
+    all_corrs = {}
+    all_counts = {}
+    all_pairs_by_dist = {}
     for snp_set in args.snp_set:
         snps = []
         for line in open(snp_set):
             data = line.split()
             snps.append("{}:{:07}".format(data[0], int(data[1]) - 1))
 
-        make_ld_plot(
-            args.scores.loc[snps, "spore"].dropna(),
-            name=splitext(basename(snp_set))[0],
+        snp_set_name = splitext(basename(snp_set))[0]
+        corrs, counts, pairs_by_dist = make_ld_plot(
+            args.scores.loc[args.scores.index.intersection(snps), "spore"].dropna(),
+            bins=[
+                0,
+                25,
+                50,
+                75,
+                100,
+                150,
+                200,
+                300,
+                400,
+                500,
+                1000,
+                1500,
+                2000,
+                3000,
+                4000,
+                5000,
+                10000,
+            ],
+            name=snp_set_name,
             outdir=dirname(args.scorefile),
+            xmax=4000,
         )
+
+        all_corrs[snp_set_name] = corrs
+        all_counts[snp_set_name] = counts
+        all_pairs_by_dist[snp_set_name] = pairs_by_dist
