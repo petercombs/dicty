@@ -46,8 +46,8 @@ def make_ld_plot(
                 "'adjacent' and 'all'"
             ).format(snp_pairs)
         )
-    corrs = pd.Series(index=size_bins.keys(), data=np.nan).sort_index()
-    counts = pd.Series(index=size_bins.keys(), data=-1).sort_index()
+    corrs = pd.Series(index=bins_left, data=np.nan).sort_index()
+    counts = pd.Series(index=bins_left, data=-1).sort_index()
 
     for bin, pvals in size_bins.items():
         counts[bin] = len(pvals)
@@ -57,7 +57,6 @@ def make_ld_plot(
     if new_figure:
         figure()
     is_good = counts > 20
-    corrs = corrs.dropna()
     plot_sizebins(
         corrs[is_good],
         bins[np.r_[is_good, True]],
