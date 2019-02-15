@@ -239,6 +239,7 @@ if __name__ == "__main__":
     all_corrs = {}
     all_counts = {}
     all_pairs_by_dist = {}
+    named_snps = {}
 
     all_snps = set()
     for snp_set in args.snp_set:
@@ -257,6 +258,7 @@ if __name__ == "__main__":
             snp_pairs="all",
         )
 
+        named_snps[snp_set_name] = snps
         all_snps.update(snps)
 
         all_corrs[snp_set_name] = corrs
