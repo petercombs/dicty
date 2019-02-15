@@ -498,10 +498,6 @@ if __name__ == "__main__":
     )
     """
 
-    spore_ld_data = make_ld_plot(combined_pvals_fwd, "Spore", outdir=outdir)
-    stalk_ld_data = make_ld_plot(combined_pvals_rev, "Stalk", outdir=outdir)
-    random_ld_data = make_ld_plot(combined_pvals_rand, "Random", outdir=outdir)
-
     for i_name, i_dataset in (
         ("spore", combined_pvals_fwd),
         ("stalk", combined_pvals_rev),
