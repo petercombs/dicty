@@ -5,7 +5,7 @@ import itertools as it
 from scipy.stats import spearmanr
 from os.path import basename, splitext, dirname, join
 from matplotlib.pyplot import figure, scatter, plot, savefig, close, xlim, ylim
-from collections import defaultdict
+from collections import defaultdict, deque
 from tqdm import tqdm
 
 
@@ -15,6 +15,7 @@ def make_ld_plot(
     bins=None,
     max_dist=1e5,
     new_figure=True,
+    snp_pairs="adjacent",
     outdir="analysis/results",
     xmin=0,
     xmax=1e4,
@@ -34,27 +35,17 @@ def make_ld_plot(
     bins_left = bins[:-1]
 
     type_scores = type_scores.sort_index()
-    size_bins = defaultdict(list)
-    pairs_by_dist = defaultdict(list)
-    last_snp = ""
-    last_chr = ""
-    last_pos = -1
-    for snp in type_scores.index:
-        chr, pos = snp.split(":")
-        pos = int(pos)
-
-        if last_chr == chr and (pos - last_pos) <= max_dist:
-            dist = pos - last_pos
-            size_bins[np.searchsorted(bins_left, dist)].append(
-                (type_scores[last_snp], type_scores[snp])
-            )
-            pairs_by_dist[pos - last_pos].append(
-                (type_scores[last_snp], type_scores[snp])
-            )
-
-        last_snp = snp
-        last_chr = chr
-        last_pos = pos
+    if snp_pairs == "adjacent":
+        size_bins, pairs_by_dist = get_adjacent_pairs(type_scores, bins, max_dist)
+    elif snp_pairs == "all":
+        size_bins, pairs_by_dist = get_all_pairs(type_scores, bins, max_dist)
+    else:
+        raise ValueError(
+            (
+                "Unknown strategy '{}'; valid values for snp_pairs are "
+                "'adjacent' and 'all'"
+            ).format(snp_pairs)
+        )
     corrs = pd.Series(index=size_bins.keys(), data=np.nan).sort_index()
     counts = pd.Series(index=size_bins.keys(), data=-1).sort_index()
 
@@ -77,6 +68,61 @@ def make_ld_plot(
     )
     plot_groupbins(pairs_by_dist, name, outdir=outdir)
     return corrs, counts, pairs_by_dist
+
+
+def get_adjacent_pairs(snps, bins, max_dist):
+    size_bins = defaultdict(list)
+    pairs_by_dist = defaultdict(list)
+    last_snp = ""
+    last_chr = ""
+    last_pos = -1
+    for snp in snps.index:
+        chr, pos = snp.split(":")
+        pos = int(pos)
+
+        if last_chr == chr and (pos - last_pos) < max(max_dist, bins[-1]):
+            dist = pos - last_pos
+            bin = bins[np.searchsorted(bins, dist) - 1]
+            size_bins[bin].append((snps[last_snp], snps[snp]))
+            pairs_by_dist[pos - last_pos].append((snps[last_snp], snps[snp]))
+
+        last_snp = snp
+        last_chr = chr
+        last_pos = pos
+    return size_bins, pairs_by_dist
+
+
+def get_all_pairs(snps, bins, max_dist):
+    max_dist = max(max_dist, bins[-1])
+    size_bins = defaultdict(list)
+    pairs_by_dist = defaultdict(list)
+
+    snps_on_chrom = deque()
+    current_chrom = ""
+
+    for snp, pval in snps.items():
+        chrom, pos = snp.split(":")
+        pos = int(pos)
+
+        if not np.isfinite(pval):
+            continue
+
+        if chrom != current_chrom:
+            snps_on_chrom = deque()
+            current_chrom = chrom
+
+        while snps_on_chrom and (pos - snps_on_chrom[0][0]) > max_dist:
+            snps_on_chrom.popleft()
+
+        for left_pos, left_pval in snps_on_chrom:
+            dist = pos - left_pos
+            bin = bins[np.searchsorted(bins, dist) - 1]
+            size_bins[bin].append((left_pval, pval))
+            pairs_by_dist[dist].append((left_pval, pval))
+
+        snps_on_chrom.append((pos, pval))
+
+    return size_bins, pairs_by_dist
 
 
 def plot_sizebins(
@@ -201,6 +247,7 @@ if __name__ == "__main__":
             name=snp_set_name,
             outdir=dirname(args.scorefile),
             xmax=4000,
+            snp_pairs="all",
         )
 
         all_snps.update(snps)
@@ -215,4 +262,5 @@ if __name__ == "__main__":
         name="all",
         outdir=dirname(args.scorefile),
         xmax=4000,
+        snp_pairs="all",
     )
