@@ -57,6 +57,12 @@ def make_ld_plot(
     if new_figure:
         figure()
     is_good = counts > 20
+    print(
+        pd.DataFrame(
+            index=corrs.index,
+            data={"lo": bins[:-1], "hi": bins[1:], "corrs": corrs, "counts": counts},
+        ).T
+    )
     plot_sizebins(
         corrs[is_good],
         bins[np.r_[is_good, True]],
@@ -223,6 +229,8 @@ bins = [
     4000,
     5000,
     10000,
+    1e5,
+    1e6,
 ]
 
 
