@@ -160,11 +160,34 @@ def parse_args():
     return args
 
 
+bins = [
+    0,
+    25,
+    50,
+    75,
+    100,
+    150,
+    200,
+    300,
+    400,
+    500,
+    1000,
+    1500,
+    2000,
+    3000,
+    4000,
+    5000,
+    10000,
+]
+
+
 if __name__ == "__main__":
     args = parse_args()
     all_corrs = {}
     all_counts = {}
     all_pairs_by_dist = {}
+
+    all_snps = set()
     for snp_set in args.snp_set:
         snps = []
         for line in open(snp_set):
@@ -174,30 +197,22 @@ if __name__ == "__main__":
         snp_set_name = splitext(basename(snp_set))[0]
         corrs, counts, pairs_by_dist = make_ld_plot(
             args.scores.loc[args.scores.index.intersection(snps), "spore"].dropna(),
-            bins=[
-                0,
-                25,
-                50,
-                75,
-                100,
-                150,
-                200,
-                300,
-                400,
-                500,
-                1000,
-                1500,
-                2000,
-                3000,
-                4000,
-                5000,
-                10000,
-            ],
+            bins=bins,
             name=snp_set_name,
             outdir=dirname(args.scorefile),
             xmax=4000,
         )
 
+        all_snps.update(snps)
+
         all_corrs[snp_set_name] = corrs
         all_counts[snp_set_name] = counts
         all_pairs_by_dist[snp_set_name] = pairs_by_dist
+
+    corrs, counts, pairs_by_dist = make_ld_plot(
+        args.scores.loc[args.scores.index.intersection(all_snps), "spore"].dropna(),
+        bins=bins,
+        name="all",
+        outdir=dirname(args.scorefile),
+        xmax=4000,
+    )
