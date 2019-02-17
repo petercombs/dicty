@@ -120,7 +120,7 @@ rule snp_counts:
 rule fisher_pvalues:
     input:
         scores=expand("analysis/{sample}/scores.tsv", sample=config['activesamples']),
-        code="CombinePvals.py"
+        #code="CombinePvals.py"
     output:
         'analysis/results/combined.all.tsv',
         'analysis/results/combined.Stalk.tsv',
@@ -140,7 +140,7 @@ rule subset_fisher_pvalues:
     input:
         dir='analysis/{group}/exists',
         scores=lambda wildcards: expand("analysis/{sample}/scores.tsv", sample=config[wildcards.group]),
-        code="CombinePvals.py"
+        #code="CombinePvals.py"
     output:
         'analysis/{group}/combined.all.tsv',
         'analysis/{group}/combined.Stalk.tsv',

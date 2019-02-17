@@ -44,6 +44,7 @@ def longest_common_suffix(list_of_strings):
 def parse_args():
     parser = ArgumentParser()
     parser.add_argument("--step-size", "-s", default=1.0, type=float)
+    parser.add_argument("--output-dir", "-o", default=None)
     parser.add_argument("gc_file")
     parser.add_argument("window_coverage_bed", nargs="+")
 
@@ -70,8 +71,8 @@ if __name__ == "__main__":
     common_suffix = longest_common_suffix(args.window_coverage_bed)
     print("---->", common_suffix)
 
+    outdir = args.output_dir if args.output_dir is not None else path.dirname(cov_file)
     for cov_file in args.window_coverage_bed:
-        outdir = path.dirname(cov_file)
         cov = pd.read_table(cov_file, header=None, names=COV_COLS, index_col=[0, 1, 2])
         # total_cov = sum(gc["seq_len"] * cov["cov"])
         gc_cov = pd.Series(index=gc_steps, data=np.nan)
@@ -100,7 +101,7 @@ if __name__ == "__main__":
         scatter(gc_cov.index * 100, y / y.mean(), label=plotname)
         ylabel("Normed Coverage")
         xlabel("% GC")
-        savefig(path.join(outdir, "gc_cov_normed.png"), dpi=300)
+        savefig(path.join(outdir, "{}_gc_cov_normed.png".format(plotname)), dpi=300)
 
     figure(1)
     hlines(
@@ -112,4 +113,4 @@ if __name__ == "__main__":
     hist(gc.frac_gc * 100, bins=gc_steps * 100)
     xlabel("% GC")
     ylabel("Density")
-    savefig(path.join(common_path, "gc_cov_normed.png"), dpi=300)
+    savefig(path.join(args.output_dir, "gc_cov_normed.png"), dpi=300)
