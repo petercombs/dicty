@@ -34,6 +34,10 @@ def make_ld_plot(
         bins = np.array(bins)
     bins_left = bins[:-1]
 
+    bgpairs = get_background_pairs(type_scores)
+    bgcorr = spearmanr(*zip(*bgpairs))[0]
+    print("Interchromosomal correlation", bgcorr)
+
     type_scores = type_scores.sort_index()
     if snp_pairs == "adjacent":
         size_bins, pairs_by_dist = get_adjacent_pairs(type_scores, bins, max_dist)
@@ -70,9 +74,27 @@ def make_ld_plot(
         outdir=outdir,
         max_dist=max_dist,
         xmax=xmax,
+        ebars=stds[is_good],
+        bglevel=bgcorr,
     )
     plot_groupbins(pairs_by_dist, name, outdir=outdir)
     return corrs, counts, pairs_by_dist
+
+
+def get_background_pairs(snps, npairs=1000):
+    """Take random pairs from different chromosomes
+
+    We are assuming that different chromosomes are unlinked. Note that this only
+    really applies if our organisms have frequent sex.
+    """
+    pairs = []
+    while len(pairs) < npairs:
+        p1, p2 = np.random.choice(snps.index, size=2, replace=False)
+        c1 = p1.split(":")[0]
+        c2 = p2.split(":")[0]
+        if c1 != c2:
+            pairs.append((snps[p1], snps[p2]))
+    return pairs
 
 
 def get_adjacent_pairs(snps, bins, max_dist):
@@ -131,12 +153,22 @@ def get_all_pairs(snps, bins, max_dist):
 
 
 def plot_sizebins(
-    good_corrs, bins, name, outdir="analysis/results/", max_dist=1e5, xmin=0, xmax=1e4
+    good_corrs,
+    bins,
+    name,
+    outdir="analysis/results/",
+    max_dist=1e5,
+    xmin=0,
+    xmax=1e4,
+    ebars=None,
+    bglevel=None,
 ):
     figure()
     plot((bins[:-1] + bins[1:]) / 2, good_corrs, label="Correlation")
     xlim(xmin, min(xmax, max_dist))
     ylim(-1, 1)
+    if bglevel is not None:
+        hlines(bglevel, 0, max(bins[-1], xmax, max_dist))
     outfile = join(outdir, "{}_ld.png".format(name))
     savefig(outfile)
     close()
