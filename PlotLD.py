@@ -8,6 +8,28 @@ from matplotlib.pyplot import figure, scatter, plot, savefig, close, xlim, ylim
 from collections import defaultdict, deque
 from tqdm import tqdm
 
+default_bins = [
+    0,
+    25,
+    50,
+    75,
+    100,
+    150,
+    200,
+    300,
+    400,
+    500,
+    1000,
+    1500,
+    2000,
+    3000,
+    4000,
+    5000,
+    10000,
+    1e5,
+    1e6,
+]
+
 
 def make_ld_plot(
     type_scores,
@@ -234,6 +256,7 @@ def plot_groupbins(pairs_by_dist, name, groupsize=50, outdir="analysis/results/"
 
 def parse_args():
     parser = ArgumentParser()
+    parser.add_argument("--bins", nargs="+", type=float, default=default_bins)
     parser.add_argument("scorefile")
     parser.add_argument("snp_set", nargs="+", help="Bed file of SNPs to test")
 
@@ -241,29 +264,6 @@ def parse_args():
     args.scores = pd.read_table(args.scorefile, index_col=0)
 
     return args
-
-
-bins = [
-    0,
-    25,
-    50,
-    75,
-    100,
-    150,
-    200,
-    300,
-    400,
-    500,
-    1000,
-    1500,
-    2000,
-    3000,
-    4000,
-    5000,
-    10000,
-    1e5,
-    1e6,
-]
 
 
 if __name__ == "__main__":
@@ -283,7 +283,7 @@ if __name__ == "__main__":
         snp_set_name = splitext(basename(snp_set))[0]
         corrs, counts, pairs_by_dist = make_ld_plot(
             args.scores.loc[args.scores.index.intersection(snps), "spore"].dropna(),
-            bins=bins,
+            bins=args.bins,
             name=snp_set_name,
             outdir=dirname(args.scorefile),
             xmax=4000,
@@ -299,8 +299,8 @@ if __name__ == "__main__":
 
     corrs, counts, pairs_by_dist = make_ld_plot(
         args.scores.loc[args.scores.index.intersection(all_snps), "spore"].dropna(),
-        bins=bins,
-        name="all",
+        bins=args.bins,
+        name="all_combined",
         outdir=dirname(args.scorefile),
         xmax=4000,
         snp_pairs="all",
