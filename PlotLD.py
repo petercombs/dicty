@@ -4,7 +4,18 @@ import numpy as np
 import itertools as it
 from scipy.stats import spearmanr
 from os.path import basename, splitext, dirname, join
-from matplotlib.pyplot import figure, scatter, plot, savefig, close, xlim, ylim
+from matplotlib.pyplot import (
+    figure,
+    hlines,
+    gca,
+    scatter,
+    plot,
+    savefig,
+    close,
+    xlim,
+    ylim,
+    semilogx,
+)
 from collections import defaultdict, deque
 from tqdm import tqdm
 
@@ -61,10 +72,11 @@ def make_ld_plot(
     print("Interchromosomal correlation", bgcorr)
 
     type_scores = type_scores.sort_index()
+    print("Collecting SNPs")
     if snp_pairs == "adjacent":
-        size_bins, pairs_by_dist = get_adjacent_pairs(type_scores, bins, max_dist)
+        size_bins, pairs_by_dist = get_adjacent_pairs(type_scores, bins_left, max_dist)
     elif snp_pairs == "all":
-        size_bins, pairs_by_dist = get_all_pairs(type_scores, bins, max_dist)
+        size_bins, pairs_by_dist = get_all_pairs(type_scores, bins_left, max_dist)
     else:
         raise ValueError(
             (
@@ -73,12 +85,15 @@ def make_ld_plot(
             ).format(snp_pairs)
         )
     corrs = pd.Series(index=bins_left, data=np.nan).sort_index()
+    stds = pd.Series(index=bins_left, data=np.nan).sort_index()
     counts = pd.Series(index=bins_left, data=-1).sort_index()
 
-    for bin, pvals in size_bins.items():
+    print("Measuring correlation in size bins")
+    for bin, pvals in tqdm(size_bins.items()):
         counts[bin] = len(pvals)
         if counts[bin] > 2:
             corrs[bin] = spearmanr(*zip(*pvals))[0]
+            stds[bin] = bootstrap_correlations(pvals)
 
     if new_figure:
         figure()
@@ -89,6 +104,7 @@ def make_ld_plot(
             data={"lo": bins[:-1], "hi": bins[1:], "corrs": corrs, "counts": counts},
         ).T
     )
+    print("Beginning Plotting")
     plot_sizebins(
         corrs[is_good],
         bins[np.r_[is_good, True]],
@@ -99,6 +115,7 @@ def make_ld_plot(
         ebars=stds[is_good],
         bglevel=bgcorr,
     )
+    print("Continuing Plotting")
     plot_groupbins(pairs_by_dist, name, outdir=outdir)
     return corrs, counts, pairs_by_dist
 
@@ -149,7 +166,8 @@ def get_all_pairs(snps, bins, max_dist):
     snps_on_chrom = deque()
     current_chrom = ""
 
-    for snp, pval in snps.items():
+    for snp in tqdm(snps.index):
+        pval = snps[snp]
         chrom, pos = snp.split(":")
         pos = int(pos)
 
@@ -159,6 +177,7 @@ def get_all_pairs(snps, bins, max_dist):
         if chrom != current_chrom:
             snps_on_chrom = deque()
             current_chrom = chrom
+            # print(chrom)
 
         while snps_on_chrom and (pos - snps_on_chrom[0][0]) > max_dist:
             snps_on_chrom.popleft()
@@ -174,6 +193,22 @@ def get_all_pairs(snps, bins, max_dist):
     return size_bins, pairs_by_dist
 
 
+def bootstrap_correlations(corrs):
+    """Use a jack-knife procedure to estimate variance of correlations
+
+    Do a repeated leave-one-out procedure to estimate variability of the
+    spearman coefficient.
+    """
+    left, right = zip(*corrs)
+    left = np.array(left)
+    right = np.array(right)
+    spearmans = []
+    for i in range(500):
+        posns = np.random.randint(len(left), size=500, dtype=int)
+        spearmans.append(spearmanr(left[posns], right[posns]))
+    return np.std(spearmans)
+
+
 def plot_sizebins(
     good_corrs,
     bins,
@@ -185,9 +220,21 @@ def plot_sizebins(
     ebars=None,
     bglevel=None,
 ):
-    figure()
-    plot((bins[:-1] + bins[1:]) / 2, good_corrs, label="Correlation")
-    xlim(xmin, min(xmax, max_dist))
+    fig = figure()
+    ax = gca()
+    if ebars is None:
+        ax.semilogx((bins[:-1] + bins[1:]) / 2, good_corrs, label="Correlation")
+    else:
+        ax.bar(bins[:-1], good_corrs, width=bins[1:] - bins[:-1], align="edge")
+        ax.errorbar(
+            (bins[:-1] + bins[1:]) / 2,
+            good_corrs,
+            yerr=ebars,
+            label="Correlation",
+            fmt="o",
+        )
+        ax.set_xscale("log")
+    # xlim(1, max_dist)
     ylim(-1, 1)
     if bglevel is not None:
         hlines(bglevel, 0, max(bins[-1], xmax, max_dist))
@@ -231,6 +278,7 @@ def plot_groupbins(pairs_by_dist, name, groupsize=50, outdir="analysis/results/"
     ]
     cnames = {i: c for i, c in zip(range(1, max(bin_colors) + 1), it.cycle(colorcycle))}
 
+    """
     pairs_at_dist = pd.Series(
         {k: len(pairs_by_dist[k]) for k in pairs_by_dist}
     ).sort_index()
@@ -238,6 +286,7 @@ def plot_groupbins(pairs_by_dist, name, groupsize=50, outdir="analysis/results/"
     xlim(-1, 50)
     savefig(join(outdir, "{}_group{:03d}_hist.png".format(name, groupsize)))
     close()
+    """
     figure()
     print(name, len(bin_colors))
     scatter(
@@ -249,8 +298,14 @@ def plot_groupbins(pairs_by_dist, name, groupsize=50, outdir="analysis/results/"
     ylim(-0.1, 1)
 
     savefig(join(outdir, "{}_group{:03d}.png".format(name, groupsize)))
-    xlim(0, 500)
+    xmin, xmax = xlim()
+    xlim(1, 500)
     savefig(join(outdir, "{}_group{:03d}_narrow.png".format(name, groupsize)))
+    xlim(1, xmax)
+    ax = gca()
+    ax.set_xscale("log")
+    savefig(join(outdir, "{}_group{:03d}_log.png".format(name, groupsize)))
+
     close()
 
 
@@ -275,12 +330,16 @@ if __name__ == "__main__":
 
     all_snps = set()
     for snp_set in args.snp_set:
-        snps = []
-        for line in open(snp_set):
-            data = line.split()
-            snps.append("{}:{:07}".format(data[0], int(data[1]) - 1))
+        if snp_set == "all":
+            snps = args.scores.index
+            snp_set_name = "all"
+        else:
+            snps = []
+            for line in open(snp_set):
+                data = line.split()
+                snps.append("{}:{:07}".format(data[0], int(data[1]) - 1))
 
-        snp_set_name = splitext(basename(snp_set))[0]
+            snp_set_name = splitext(basename(snp_set))[0]
         corrs, counts, pairs_by_dist = make_ld_plot(
             args.scores.loc[args.scores.index.intersection(snps), "spore"].dropna(),
             bins=args.bins,
