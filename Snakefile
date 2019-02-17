@@ -633,6 +633,30 @@ rule variants_to_beds:
     python VCF_to_Bed.py {input.vcf} {output.snps} {output.indels}
     """
 
+rule autosome_snps:
+    input:
+        "analysis/combined/all.snps.bed",
+    output:
+        "analysis/combined/autosomes.snps.bed",
+    shell: """
+    grep "DDB02324" < {input} > {output}
+    """
+
+rule snps_by_gcchange:
+    input:
+        "{dir}/autosomes.snps.bed"
+    output:
+        more="{dir}/snps.moregc.bed",
+        less="{dir}/snps.lessgc.bed",
+        same="{dir}/snps.samegc.bed",
+    shell: """
+    grep -P "[AT]|[GC]" {input} > {output.more}
+    grep -P "[GC]|[AT]" {input} > {output.less}
+    grep -P "([AT]\|[AT]|[GC]\|[GC])" {input} > {output.same}
+    """
+
+
+
 rule bed_to_vep:
     input:
         tr_file="Reference/chrom_names.txt",
