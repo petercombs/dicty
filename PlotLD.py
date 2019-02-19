@@ -7,6 +7,7 @@ from os.path import basename, splitext, dirname, join
 from matplotlib.pyplot import (
     figure,
     hlines,
+    vlines,
     gca,
     scatter,
     plot,
@@ -235,9 +236,10 @@ def plot_sizebins(
         )
         ax.set_xscale("log")
     # xlim(1, max_dist)
-    ylim(-1, 1)
+    ylim(-.5, 1)
     if bglevel is not None:
         hlines(bglevel, 0, max(bins[-1], xmax, max_dist))
+        vlines([150, 300], -0.5, 1)
     outfile = join(outdir, "{}_ld.png".format(name))
     savefig(outfile)
     close()
