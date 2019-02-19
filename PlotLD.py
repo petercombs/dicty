@@ -232,7 +232,13 @@ def plot_sizebins(
     if ebars is None:
         ax.semilogx((bins[:-1] + bins[1:]) / 2, good_corrs, label="Correlation")
     else:
-        ax.bar(bins[:-1], good_corrs, width=bins[1:] - bins[:-1], align="edge")
+        ax.bar(
+            bins[:-1],
+            good_corrs,
+            width=bins[1:] - bins[:-1],
+            align="edge",
+            bottom=bglevel,
+        )
         ax.errorbar(
             (bins[:-1] + bins[1:]) / 2,
             good_corrs,
