@@ -436,6 +436,19 @@ rule namesort_bam:
     samtools sort -n -o {output} {input}
     """
 
+rule insert_size_metrics:
+    input: "{sample}.bam"
+    output:
+        metrics="{sample}.size_metrics.txt",
+        histogram="{sample}.size_metrics.pdf",
+    shell: """
+    module load picard
+    picard CollectInsertSizeMetrics \
+        INPUT={input} \
+        OUTPUT={output.metrics} \
+        HISTOGRAM_FILE={output.histogram}
+    """
+
 rule ecoli_bam:
     input:
         bam="{sample}/bowtie2_dedup.bam",
@@ -650,8 +663,8 @@ rule snps_by_gcchange:
         less="{dir}/snps.lessgc.bed",
         same="{dir}/snps.samegc.bed",
     shell: """
-    grep -P "[AT]|[GC]" {input} > {output.more}
-    grep -P "[GC]|[AT]" {input} > {output.less}
+    grep -P "[AT]\|[GC]" {input} > {output.more}
+    grep -P "[GC]\|[AT]" {input} > {output.less}
     grep -P "([AT]\|[AT]|[GC]\|[GC])" {input} > {output.same}
     """
 
