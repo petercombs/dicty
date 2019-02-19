@@ -663,8 +663,8 @@ rule snps_by_gcchange:
         less="{dir}/snps.lessgc.bed",
         same="{dir}/snps.samegc.bed",
     shell: """
-    grep -P "[AT]|[GC]" {input} > {output.more}
-    grep -P "[GC]|[AT]" {input} > {output.less}
+    grep -P "[AT]\|[GC]" {input} > {output.more}
+    grep -P "[GC]\|[AT]" {input} > {output.less}
     grep -P "([AT]\|[AT]|[GC]\|[GC])" {input} > {output.same}
     """
 
