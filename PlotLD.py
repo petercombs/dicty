@@ -205,8 +205,14 @@ def bootstrap_correlations(corrs):
     right = np.array(right)
     spearmans = []
     for i in range(500):
-        posns = np.random.randint(len(left), size=500, dtype=int)
-        spearmans.append(spearmanr(left[posns], right[posns]))
+        # posns = np.random.randint(len(left), size=500, dtype=int)
+        dropout = np.random.randint(len(left))
+        spearmans.append(
+            spearmanr(
+                np.r_[left[:dropout], left[dropout + 1 :]],
+                np.r_[right[:dropout], right[dropout + 1 :]],
+            )
+        )
     return np.std(spearmans)
 
 
