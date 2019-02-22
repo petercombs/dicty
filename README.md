@@ -14,7 +14,7 @@ the `activesamples` variable to include the correct samples. I _think_ I wrote
 the Snakefile to find files based on name assuming that it's relatively sanely
 named, but ymmv...
 
-From there, it should be straightforward to simply use `snakemake` in the simplest possible way, i.e.:
+After downloading prerequisite files, it should be straightforward to simply use `snakemake` in the simplest possible way, i.e.:
  
 ```
 snakemake --use-conda all
@@ -23,3 +23,29 @@ snakemake --use-conda all
 which should generate the appropriate output files in `analysis/results`. This
 is a relatively wide job tree (with a couple narrow chokepoints), so giving
 snakemake as many cores as you can will be helpful.
+
+
+Prerequisites
+======
+
+You will need to download Dictyostelium and E. coli FASTA files and save them as:
+
+* `Reference/reference.fasta` (Dictyostelium genome)
+* `Reference/ecoli_k12_mg1655.fasta` (E. coli)
+
+You should also have lmod installed, and have modules for:
+
+* STAR
+* bcftools
+* bedtools
+* bioawk
+* blast
+* bowtie2
+* cufflinks
+* java
+* macs2
+* picard
+* samtools
+
+Additionally, you should have docker installed and the Ensembl Variant Effect
+Predictor dockerfile (ensemblorg/ensembl-vep) downloaded.
