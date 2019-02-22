@@ -339,6 +339,8 @@ def parse_args():
 
     args = parser.parse_args()
     args.scores = pd.read_table(args.scorefile, index_col=0)
+    for i in range(len(args.bins)):
+        args.bins[i] = int(args.bins[i])
 
     return args
 
