@@ -241,7 +241,7 @@ def plot_sizebins(
     else:
         ax.bar(
             bins[:-1],
-            good_corrs,
+            good_corrs - bglevel,
             width=bins[1:] - bins[:-1],
             align="edge",
             bottom=bglevel,
@@ -251,6 +251,7 @@ def plot_sizebins(
             good_corrs,
             yerr=ebars,
             label="Correlation",
+            ecolor="k",
             fmt="o",
         )
         ax.set_xscale("log")
