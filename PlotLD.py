@@ -68,9 +68,16 @@ def make_ld_plot(
         bins = np.array(bins)
     bins_left = bins[:-1]
 
-    bgpairs = get_background_pairs(type_scores)
-    bgcorr = spearmanr(*zip(*bgpairs))[0]
-    print("Interchromosomal correlation", bgcorr)
+    chroms = {ix.split(":")[0] for ix in type_scores.index}
+    if len(chroms) > 1:
+        bgpairs = get_background_pairs(type_scores)
+        bgcorr, bgpval = spearmanr(*zip(*bgpairs))
+    else:
+        bgcorr = 0
+        bgpval = 1
+    print("-" * 40)
+    print(name)
+    print("Interchromosomal correlation", bgcorr, "({:g})".format(bgpval))
 
     type_scores = type_scores.sort_index()
     print("Collecting SNPs")
