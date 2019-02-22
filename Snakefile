@@ -166,13 +166,19 @@ rule VEP_overlap:
     bedtools intersect -wo -a {input.bed} -b {input.vep} > {output.tsv}
     """
 
-rule dictybase_annotation:
+rule download_dictybase_annot:
     input: "Reference/exists"
+    output: "Reference/dicty_gff3_11302016.zip"
+    shell: "wget -O {output} http://dictybase.org/download/gff3/dicty_gff3_11302016.zip"
+
+rule dictybase_annotation:
+    input: "Reference/dicty_gff3_11302016.zip"
     output: "Reference/dicty.gff"
     shell: """
     cd Reference
-    wget http://dictybase.org/download/gff3/dicty_gff3_11302016.zip
-    unzip -foj dicty_gff3_11302016.zip
+    set +e
+    unzip -oj dicty_gff3_11302016.zip
+    set -e
     cd ..
     cat Reference/chromosome_*.gff | grep -v '^#' > {output}
     """
