@@ -87,7 +87,7 @@ def make_ld_plot(
         )
     corrs = pd.Series(index=bins_left, data=np.nan).sort_index()
     stds = pd.Series(index=bins_left, data=np.nan).sort_index()
-    counts = pd.Series(index=bins_left, data=-1).sort_index()
+    counts = pd.Series(index=bins_left, data=0, dtype=int).sort_index()
 
     print("Measuring correlation in size bins")
     for bin, pvals in tqdm(size_bins.items()):
@@ -103,7 +103,7 @@ def make_ld_plot(
         pd.DataFrame(
             index=corrs.index,
             data={"lo": bins[:-1], "hi": bins[1:], "corrs": corrs, "counts": counts},
-        ).T
+        )
     )
     print("Beginning Plotting")
     plot_sizebins(
