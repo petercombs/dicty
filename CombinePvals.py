@@ -460,7 +460,8 @@ if __name__ == "__main__":
         combined_pvals_fwd = combined_pvals_fwd.loc[on_autosome]
         combined_pvals_rev = combined_pvals_rev.loc[on_autosome]
         combined_pvals_rand = combined_pvals_rand.loc[on_autosome]
-    make_qq_plot(combined_pvals_fwd, combined_pvals_rev, combined_pvals_rand)
+
+    # make_qq_plot(combined_pvals_fwd, combined_pvals_rev, combined_pvals_rand)
 
     make_tehranchigram(all_stalk_freqs, all_spore_freqs)
 
@@ -476,6 +477,7 @@ if __name__ == "__main__":
         fname="autosome_prepost",
     )
 
+    """
     make_manhattan_plot(
         combined_pvals_fwd, combined_pvals_rev, outdir=outdir, autosomes=args.autosomes
     )
@@ -484,12 +486,13 @@ if __name__ == "__main__":
         spore_ref_depth + spore_alt_depth,
         stalk_ref_depth + stalk_alt_depth,
         outdir=outdir,
-        label="-log10 coverage",
+        label="log10 coverage",
         fname="coverage",
         plot_bonferroni=False,
         autosomes=args.autosomes,
         violin=True,
     )
+    """
 
     for i_name, i_dataset in (
         ("spore", combined_pvals_fwd),
