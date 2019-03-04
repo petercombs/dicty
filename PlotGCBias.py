@@ -49,6 +49,10 @@ def parse_args():
     parser.add_argument("window_coverage_bed", nargs="+")
 
     args = parser.parse_args()
+
+    if args.output_dir is None:
+        args.output_dir = path.dirname(args.window_coverage_bed[0])
+
     return args
 
 
@@ -71,7 +75,7 @@ if __name__ == "__main__":
     common_suffix = longest_common_suffix(args.window_coverage_bed)
     print("---->", common_suffix)
 
-    outdir = args.output_dir if args.output_dir is not None else path.dirname(cov_file)
+    outdir = args.output_dir
     for cov_file in args.window_coverage_bed:
         cov = pd.read_table(cov_file, header=None, names=COV_COLS, index_col=[0, 1, 2])
         # total_cov = sum(gc["seq_len"] * cov["cov"])
