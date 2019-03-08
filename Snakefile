@@ -159,6 +159,7 @@ rule pval_plots:
     input:
         scores='{dir}/combined.all.tsv',
         translation='Reference/chrom_names.txt',
+        min_samples='params/min_samples',
     output:
         '{dir}/manhattan.png',
         '{dir}/combined_pvals_spore_and_stalk.png',
@@ -167,6 +168,7 @@ rule pval_plots:
     export MPLBACKEND=Agg
     python PlotCombinedPvals.py \
         --autosomes 1 2 3 4 5 6 \
+        --min-samples `cat {input.min_samples}` \
         --translation {input.translation} \
         --output-prefix {wildcards.dir}/ \
         -- {input.scores}
