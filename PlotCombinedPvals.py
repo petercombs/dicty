@@ -9,6 +9,7 @@ from CombinePvals import (
     plot_top_snps,
 )
 from matplotlib.pyplot import hist, figure, close, savefig
+from tqdm import tqdm
 
 
 def parse_args():
@@ -29,6 +30,30 @@ def parse_args():
 
     parsed_args = parser.parse_args()
     return parsed_args
+
+
+def gc_bias_change(score_table, min_samples=5):
+    out = {}
+    at = {"A", "T"}
+    gc = {"G", "C"}
+    score_table = score_table.loc[score_table.num_snps > min_samples]
+    for ix in tqdm(score_table.index):
+        row = score_table.loc[ix]
+        pre, post = ix.split("_")[-1].split("|")
+
+        if pre in at and post in gc:
+            change = -1
+        elif pre in gc and post in at:
+            change = 1
+        else:
+            change = 0
+
+        if (row.stalk_ref_depth + row.spore_ref_depth) < (
+            row.stalk_alt_depth + row.spore_alt_depth
+        ):
+            change = -change
+        out[ix] = change
+    return pd.Series(out)
 
 
 if __name__ == "__main__":
@@ -118,6 +143,12 @@ if __name__ == "__main__":
         autosomes=args.autosomes,
         violin=True,
     )
+
+    print("Estimating effect of GC Bias on SNP recovery")
+    res = gc_bias_change(pval_table, min_samples=args.min_samples)
+    print("SNPs that increase GC", sum(res == -1))
+    print("SNPs that increase AT", sum(res == 1))
+    print("SNPs that don't change AT/GC", sum(res == 0))
 
 #    for i_name, i_dataset in (
 #        ("spore", combined_pvals_spore),

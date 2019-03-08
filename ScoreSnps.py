@@ -28,8 +28,8 @@ def read_snpcounts(fname):
     with open(fname) as fh:
         next(fh)  # Skip header
         for line in fh:
-            chr, pos, ref, alt, nonra = line.split()
-            outdict[(chr, int(pos))] = [int(ref), int(alt)]
+            chr, pos, refbase, altbase, ref, alt, nonra = line.split()
+            outdict[(chr, int(pos))] = [int(ref), int(alt), refbase, altbase]
     return outdict
 
 
@@ -55,13 +55,17 @@ if __name__ == "__main__":
     out_stalk_alt = {}
     out_spore_ref = {}
     out_spore_alt = {}
+    out_refbase = {}
+    out_altbase = {}
     pool = Pool()
     for pos in tqdm(in_both):
         table = [
             [args.stalk_count[pos][0], args.stalk_count[pos][1]],
             [args.spore_count[pos][0], args.spore_count[pos][1]],
         ]
-        snpid = "{}:{:07d}".format(*pos)
+        snpid = "{}:{:07d}_{}|{}".format(
+            *pos, args.spore_count[pos][2], args.spore_count[pos][3]
+        )
         out_pvals[snpid] = pool.apply_async(fisher_exact, [table])
         out_stalk_ref[snpid] = args.stalk_count[pos][0]
         out_stalk_alt[snpid] = args.stalk_count[pos][1]

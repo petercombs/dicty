@@ -70,6 +70,23 @@ if __name__ == "__main__":
                     out_table[ptuple][2] += 1
 
     with open(args.output, "w") as outfh:
-        print("CHROM", "POS", "REF", "ALT", "NON_REFALT", sep="\t", file=outfh)
+        print(
+            "CHROM",
+            "POS",
+            "REF_BASE",
+            "ALT_BASE",
+            "REF",
+            "ALT",
+            "NON_REFALT",
+            sep="\t",
+            file=outfh,
+        )
         for (chrom, pos) in sorted(out_table):
-            print(chrom, pos, *out_table[(chrom, pos)], sep="\t", file=outfh)
+            print(
+                chrom,
+                pos,
+                *snps[chrom][pos - 1],
+                *out_table[(chrom, pos)],
+                sep="\t",
+                file=outfh
+            )
