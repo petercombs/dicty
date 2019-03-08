@@ -94,7 +94,8 @@ if __name__ == "__main__":
     out = out.sort_values(by="pval")
     out["rank"] = -1
     i = 0
-    for ix, row in out.iterrows():
+    print("Updating ranks")
+    for ix, row in tqdm(out.iterrows(), total=len(out.index)):
         if (
             (row.stalk_alt + row.spore_alt > 0)
             and (row.stalk_ref + row.spore_ref > 0)
