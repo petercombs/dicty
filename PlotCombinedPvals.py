@@ -107,10 +107,10 @@ if __name__ == "__main__":
 
     hist(
         pval_table_orig.num_snps,
-        normed=True,
+        density=True,
         bins=np.arange(1, max(pval_table_orig.num_snps)),
     )
-    hist(pval_table_orig.num_snps.loc[on_autosome], normed=True, histtype="step")
+    hist(pval_table_orig.num_snps.loc[on_autosome], density=True, histtype="step")
     savefig(path.join(outdir, "num_snps.png"))
     close()
 
