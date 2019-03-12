@@ -389,6 +389,21 @@ rule scores_to_bed:
     > {output[0]}
     """)
 
+rule all_scores_to_bed:
+    input:
+        tsv="{sample}.{part}.tsv",
+    output:
+        "{sample}.{part}.all.bed",
+    shell: dedent("""
+    module load bedtools
+    awk ' {{split($1,a,":"); \
+            printf("%s\t%d\t%d\t{wildcards.part}_%d\t%g\\n", \
+                    a[1], a[2]-1, a[2], NR, $2)\
+            }}' {input.tsv}  \
+    | bedtools sort \
+    > {output[0]}
+    """)
+
 ruleorder: reduce_vep_snps > scores_to_bed
 rule genes_near_snps:
     input:
