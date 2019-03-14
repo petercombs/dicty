@@ -404,6 +404,17 @@ rule all_scores_to_bed:
     > {output[0]}
     """)
 
+rule all_scores_bedgraph:
+    input:
+        bed="{file}.bed",
+        genome="Reference/dicty.notrans.chroms.sizes",
+    output:
+        bedgraph="{file}.bedgraph",
+    shell:"""
+    module load bioawk
+    bioawk -t '{{print $1,$2,$3, -log($5)/log(10)}}' < {input.bed} > {output.bedgraph}
+    """
+
 ruleorder: reduce_vep_snps > scores_to_bed
 rule genes_near_snps:
     input:
