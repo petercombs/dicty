@@ -78,40 +78,27 @@ if __name__ == "__main__":
 
     columns = mytools_columns + vep_columns + ["overlap"]
 
-    spore_scores = pd.read_csv(
-        args.spore_scores, sep="\t", header=None, names=columns, index_col=None
-    )
-
-    for ix, row in spore_scores.iterrows():
-        if row.vep is np.nan:
-            continue
-        vep_data = row.vep.split("|")
-        gene_name = vep_data[3]
-        gene_id = vep_data[4]
-        var_type = vep_data[1]
-        if gene_id in target_classes and var_type in args.variant_types:
-            if row.score == 0:
-                print(row)
-            best_score_spore[gene_id] = min(best_score_spore[gene_id], row.score)
-        if gene_name in target_classes and var_type in args.variant_types:
-            best_score_spore[gene_name] = min(best_score_spore[gene_name], row.score)
-
-    best_score_spore[best_score_spore == 2.0] = np.nan
+    spore_scores = pd.read_csv(args.spore_scores, sep="\t", header=None, names=columns)
     stalk_scores = pd.read_csv(args.stalk_scores, sep="\t", header=None, names=columns)
 
-    for ix, row in stalk_scores.iterrows():
-        if row.vep is np.nan:
-            continue
-        vep_data = row.vep.split("|")
-        gene_name = vep_data[3]
-        gene_id = vep_data[4]
-        var_type = vep_data[1]
-        if gene_id in target_classes and var_type in args.variant_types:
-            best_score_stalk[gene_id] = min(best_score_stalk[gene_id], row.score)
-        if gene_name in target_classes and var_type in args.variant_types:
-            best_score_stalk[gene_name] = min(best_score_stalk[gene_name], row.score)
+    for scores, best_scores in zip(
+        [spore_scores, stalk_scores], [best_score_spore, best_score_stalk]
+    ):
+        for ix, row in scores.iterrows():
+            if row.vep is np.nan:
+                continue
+            vep_data = row.vep.split("|")
+            gene_name = vep_data[3]
+            gene_id = vep_data[4]
+            var_type = vep_data[1]
+            if gene_id in target_classes and var_type in args.variant_types:
+                if row.score == 0:
+                    print(row)
+                best_scores[gene_id] = min(best_scores[gene_id], row.score)
+            if gene_name in target_classes and var_type in args.variant_types:
+                best_scores[gene_name] = min(best_scores[gene_name], row.score)
+        best_scores[best_scores == 2.0] = np.nan
 
-    best_score_stalk[best_score_stalk == 2.0] = np.nan
     best_score = -np.log10(
         pd.DataFrame(
             {"spore": best_score_spore.dropna(), "stalk": best_score_stalk.dropna()}
