@@ -14,30 +14,18 @@ from collections import defaultdict
 import pandas as pd
 import numpy as np
 import itertools as it
-from numpy import arange, log10, nan, ceil, sqrt, isfinite
+from numpy import log10, nan, isfinite
 from scipy.stats import combine_pvalues
-from matplotlib.pyplot import (
-    xlim,
-    ylim,
-    xticks,
-    yticks,
-    plot,
-    scatter,
-    subplot2grid,
-    violinplot,
-    xlabel,
-    ylabel,
-    legend,
-    figure,
-    subplot,
-    close,
-    title,
-    hist2d,
-)
 import matplotlib.pyplot as mpl
 import pickle as pkl
 from numpy.random import shuffle, rand
 from tqdm import tqdm
+from PlotCombinedPvals import (
+    make_qq_plot,
+    make_tehranchigram,
+    make_manhattan_plot,
+    plot_top_snps,
+)
 
 
 def parse_args():
@@ -144,221 +132,7 @@ def combine_all_pvals(table, indices):
     return out
 
 
-def make_qq_plot(
-    combined_pvals_spore,
-    combined_pvals_stalk,
-    combined_pvals_rand,
-    outdir="analysis/results/",
-):
-    figure()
-    scatter(
-        -log10(combined_pvals_rand),
-        -log10(combined_pvals_spore),
-        label="Spore specific",
-    )
-    scatter(
-        -log10(combined_pvals_rand),
-        -log10(combined_pvals_stalk),
-        label="Stalk specific",
-    )
-
-    plot([0, 7], [0, 7], "r:")
-    xlabel("-log10 p Expected")
-    ylabel("-log10 p Observed")
-    legend(loc="lower right")
-    mpl.savefig(path.join(outdir, "combined_pvals_spore_and_stalk.png"))
-    close()
-
-
 startswith = lambda y: lambda x: x.startswith(y)
-
-
-def make_manhattan_plot(
-    spore_pvals,
-    stalk_pvals,
-    outdir="analysis/results",
-    translation="Reference/chrom_names.txt",
-    fname="manhattan",
-    plot_bonferroni=True,
-    label="-log10 p",
-    autosomes=[],
-    violin=False,
-):
-    spore_pvals = spore_pvals.sort_index()
-    stalk_pvals = stalk_pvals.sort_index()
-    translator = {}
-    if path.exists(translation):
-        for line in open(translation):
-            line = line.strip().split()
-            translator[line[0]] = line[1]
-    chrom_of = np.array([x.split(":")[0] for x in stalk_pvals.index])
-    if autosomes:
-        print("Before: ", len(spore_pvals))
-        on_autosome = [x in autosomes or translator[x] in autosomes for x in chrom_of]
-        spore_pvals = spore_pvals.ix[on_autosome]
-        stalk_pvals = stalk_pvals.ix[on_autosome]
-        chrom_of = chrom_of[on_autosome]
-        print("After: ", len(spore_pvals))
-    chroms = sorted(set(chrom_of))
-    reds = ["red", "darkred", "pink"]
-    blues = ["blue", "darkblue", "lightblue"]
-    chroms_colors_red = {ix: reds[i % len(reds)] for i, ix in enumerate(chroms)}
-    chroms_colors_blue = {ix: blues[i % len(blues)] for i, ix in enumerate(chroms)}
-
-    plot_kwargs = {"s": 1}
-    x = arange(len(stalk_pvals))
-
-    chrom_midpoints = {
-        x[[(i == chrom) for i in chrom_of]].mean(): translator.get(chrom, chrom)
-        for chrom in chroms
-    }
-
-    mpl.figure()
-    if violin:
-        subplot2grid((1, 5), (0, 0), colspan=4)
-    mpl.scatter(
-        x,
-        -log10(spore_pvals.sort_index()),
-        label="Spore",
-        c=[chroms_colors_red[ix] for ix in chrom_of],
-        **plot_kwargs,
-    )
-    mpl.scatter(
-        x,
-        log10(stalk_pvals.sort_index()),
-        label="Stalk",
-        c=[chroms_colors_blue[ix] for ix in chrom_of],
-        **plot_kwargs,
-    )
-    if plot_bonferroni:
-        mpl.hlines(
-            [log10(.05 / len(x)), -log10(.05 / len(x))],
-            0,
-            len(x),
-            "k",
-            linestyles="dashed",
-            lw=.5,
-        )
-    ticks = yticks()[0]
-    yticks(ticks, np.abs(ticks))
-    xticks(*zip(*chrom_midpoints.items()), rotation=90)
-    ylabel(label)
-    mpl.legend(loc="lower left", bbox_to_anchor=(0.8, 1.0))
-
-    if violin:
-        subplot2grid((1, 5), (0, 4))
-        result = violinplot(
-            list(filter(isfinite, -log10(spore_pvals))),
-            showextrema=False,
-            showmedians=True,
-        )
-        for body in result["bodies"]:
-            body.set_color("r")
-        result = violinplot(
-            list(filter(isfinite, log10(stalk_pvals))),
-            showextrema=False,
-            showmedians=True,
-        )
-        for body in result["bodies"]:
-            body.set_color("b")
-        xticks([])
-        yticks(ticks, np.abs(ticks))
-
-    mpl.tight_layout()
-    mpl.savefig(path.join(outdir, fname), dpi=900)
-
-
-def make_tehranchigram(
-    all_stalk_freqs,
-    all_spore_freqs,
-    vmax=None,
-    outdir="analysis/results",
-    fname="all_prepost",
-):
-    """Pre vs post plot
-
-    Of course, in this case, neither one is obviously pre or post-treatment, but
-    the point stands.
-    """
-    if isinstance(all_stalk_freqs, dict):
-        all_stalk_freqs = list(it.chain(*all_stalk_freqs.values()))
-    if isinstance(all_spore_freqs, dict):
-        all_spore_freqs = list(it.chain(*all_spore_freqs.values()))
-    figure()
-    x = pd.Series(all_stalk_freqs)
-    y = pd.Series(all_spore_freqs)
-    if vmax is None:
-        vmax = np.percentile(np.reshape(np.histogram2d(x, y, bins=20)[0], -1), 98)
-
-    hist2d(
-        x[isfinite(x) & isfinite(y)], y[isfinite(x) & isfinite(y)], vmax=vmax, bins=20
-    )
-    xlabel("Stalk Frequency")
-    ylabel("Spore Frequency")
-    mpl.colorbar()
-    mpl.savefig(path.join(outdir, fname))
-    close()
-
-
-def plot_top_snps(
-    dataset,
-    name,
-    num_snps,
-    all_fet_data,
-    num_snps_to_plot=16,
-    outdir="analysis/results",
-):
-    """Plot stalk/spore frequencies of top SNPs
-
-    Each SNP gets its own window, with one point per sample.
-    """
-    n_rows = int(ceil(sqrt(num_snps_to_plot)))
-    n_cols = num_snps_to_plot // n_rows
-    assert n_rows * n_cols >= num_snps_to_plot
-
-    figure(figsize=(16, 12))
-
-    for i in range(num_snps_to_plot):
-        snp = dataset.index[i]
-        ax = subplot(n_rows, n_cols, i + 1)
-        title("{}\n{} samples - {:3.1e}".format(snp, num_snps[snp], dataset.loc[snp]))
-        stalks = [
-            all_fet_data[file].loc[snp, "stalk_ratio"]
-            for file in args.scores
-            if (
-                all_fet_data[file].loc[snp, "stalk_alt"]
-                + all_fet_data[file].loc[snp, "spore_alt"]
-            )
-            > 0
-        ]
-        spores = [
-            all_fet_data[file].loc[snp, "spore_ratio"]
-            for file in args.scores
-            if (
-                all_fet_data[file].loc[snp, "stalk_alt"]
-                + all_fet_data[file].loc[snp, "spore_alt"]
-            )
-            > 0
-        ]
-        scatter(stalks, spores)
-        plot([0, 1], [0, 1], "r:")
-        ax.set_aspect(1)
-        xlim(-0.1, 1.1)
-        ylim(-0.1, 1.1)
-        if i % n_cols == 0:
-            ylabel("Spores")
-            yticks([0, .25, .5, .75, 1])
-        else:
-            yticks([])
-        if i // n_cols == n_rows - 1:
-            xlabel("Stalks")
-            xticks([0, .5, 1])
-        else:
-            xticks([])
-
-    mpl.tight_layout()
-    mpl.savefig(path.join(outdir, "{}_snps.png".format(name)))
-    close()
 
 
 if __name__ == "__main__":
