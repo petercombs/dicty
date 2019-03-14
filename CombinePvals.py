@@ -398,11 +398,17 @@ if __name__ == "__main__":
 
         combined_pvals_fwd.sort_values(inplace=True)
         combined_pvals_rev.sort_values(inplace=True)
+        combined_pvals_nondir = (
+            pd.DataFrame({"stalk": combined_pvals_rev, "spore": combined_pvals_fwd})
+            .T.min()
+            .sort_index()
+        )
         combined_pvals_rand.sort_values(inplace=True)
 
         combined_pvals_fwd.to_csv(args.output_prefix + ".Spore.tsv", sep="\t")
         combined_pvals_rev.to_csv(args.output_prefix + ".Stalk.tsv", sep="\t")
         combined_pvals_rand.to_csv(args.output_prefix + ".Random.tsv", sep="\t")
+        combined_pvals_nondir.to_csv(args.output_prefix + ".Best.tsv", sep="\t")
 
     out_table = pd.DataFrame(
         {
