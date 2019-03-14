@@ -11,15 +11,27 @@ import numpy as np
 from matplotlib.pyplot import get_cmap
 
 coolwarm = get_cmap("coolwarm")
+inferno = get_cmap("inferno")
 
 
-def get_hex(l10spore, l10stalk, l10best):
+def get_hex(l10spore, l10stalk, l10best, type="single"):
+    if type == "single":
+        r, g, b, a = get_hex_monovalent(max(l10spore, l10stalk), l10best)
+    elif type == "double":
+        r, g, b, a = get_hex_bivalent(l10spore, l10stalk, l10best)
+    return "#{:02X}{:02X}{:02X}".format(int(255 * r), int(255 * g), int(255 * b))
+
+
+def get_hex_monovalent(l10, l10best):
+    return inferno(l10 / (l10best + 1))
+
+
+def get_hex_bivalent(l10spore, l10stalk, l10best):
     if l10spore > l10stalk:
         val = 0.5 + l10spore / l10best / 2
     else:
         val = 0.5 - l10stalk / l10best / 2
-    r, g, b, a = coolwarm(val)
-    return "#{:02X}{:02X}{:02X}".format(int(255 * r), int(255 * g), int(255 * b))
+    return coolwarm(val)
 
 
 def parse_args():
@@ -109,7 +121,7 @@ if __name__ == "__main__":
 
     for gene in best_score.index:
         print(
-            '.{} {{fill: "{}" }}'.format(
+            ".{} {{fill: {} }}".format(
                 gene,
                 get_hex(
                     best_score.loc[gene, "spore"],
