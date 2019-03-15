@@ -127,6 +127,8 @@ rule fisher_pvalues:
         'analysis/results/combined.Spore.tsv',
         'analysis/results/combined.Random.tsv',
         'analysis/results/combined.Best.tsv',
+        'analysis/results/spore_snps.png',
+        'analysis/results/stalk_snps.png',
         #'analysis/results/manhattan.png',
     conda: "envs/dicty.yaml"
     shell: """

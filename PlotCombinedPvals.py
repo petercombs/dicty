@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import itertools as it
 from numpy import arange, log10, ceil, sqrt, isfinite
 from argparse import ArgumentParser
 from os import path
@@ -22,6 +23,10 @@ from matplotlib.pyplot import (
     hist,
     hist2d,
     savefig,
+    errorbar,
+    hlines,
+    colorbar,
+    tight_layout,
 )
 from tqdm import tqdm
 
@@ -94,7 +99,7 @@ def make_qq_plot(
     xlabel("-log10 p Expected")
     ylabel("-log10 p Observed")
     legend(loc="lower right")
-    mpl.savefig(path.join(outdir, "combined_pvals_spore_and_stalk.png"))
+    savefig(path.join(outdir, "combined_pvals_spore_and_stalk.png"))
     close()
 
 
@@ -138,17 +143,17 @@ def make_manhattan_plot(
         for chrom in chroms
     }
 
-    mpl.figure()
+    figure()
     if violin:
         subplot2grid((1, 5), (0, 0), colspan=4)
-    mpl.scatter(
+    scatter(
         x,
         -log10(spore_pvals.sort_index()),
         label="Spore",
         c=[chroms_colors_red[ix] for ix in chrom_of],
         **plot_kwargs,
     )
-    mpl.scatter(
+    scatter(
         x,
         log10(stalk_pvals.sort_index()),
         label="Stalk",
@@ -156,7 +161,7 @@ def make_manhattan_plot(
         **plot_kwargs,
     )
     if plot_bonferroni:
-        mpl.hlines(
+        hlines(
             [log10(.05 / len(x)), -log10(.05 / len(x))],
             0,
             len(x),
@@ -168,7 +173,7 @@ def make_manhattan_plot(
     yticks(ticks, np.abs(ticks))
     xticks(*zip(*chrom_midpoints.items()), rotation=90)
     ylabel(label)
-    mpl.legend(loc="lower left", bbox_to_anchor=(0.8, 1.0))
+    legend(loc="lower left", bbox_to_anchor=(0.8, 1.0))
 
     if violin:
         subplot2grid((1, 5), (0, 4))
@@ -189,8 +194,8 @@ def make_manhattan_plot(
         xticks([])
         yticks(ticks, np.abs(ticks))
 
-    mpl.tight_layout()
-    mpl.savefig(path.join(outdir, fname), dpi=900)
+    tight_layout()
+    savefig(path.join(outdir, fname), dpi=900)
 
 
 def make_tehranchigram(
@@ -220,8 +225,8 @@ def make_tehranchigram(
     )
     xlabel("Stalk Frequency")
     ylabel("Spore Frequency")
-    mpl.colorbar()
-    mpl.savefig(path.join(outdir, fname))
+    colorbar()
+    savefig(path.join(outdir, fname))
     close()
 
 
@@ -232,6 +237,8 @@ def plot_top_snps(
     all_fet_data,
     num_snps_to_plot=16,
     outdir="analysis/results",
+    show_ebars=True,
+    ebar_pseudocount=0.5,
 ):
     """Plot stalk/spore frequencies of top SNPs
 
@@ -249,7 +256,7 @@ def plot_top_snps(
         title("{}\n{} samples - {:3.1e}".format(snp, num_snps[snp], dataset.loc[snp]))
         stalks = [
             all_fet_data[file].loc[snp, "stalk_ratio"]
-            for file in args.scores
+            for file in all_fet_data
             if (
                 all_fet_data[file].loc[snp, "stalk_alt"]
                 + all_fet_data[file].loc[snp, "spore_alt"]
@@ -258,7 +265,7 @@ def plot_top_snps(
         ]
         spores = [
             all_fet_data[file].loc[snp, "spore_ratio"]
-            for file in args.scores
+            for file in all_fet_data
             if (
                 all_fet_data[file].loc[snp, "stalk_alt"]
                 + all_fet_data[file].loc[snp, "spore_alt"]
@@ -266,6 +273,56 @@ def plot_top_snps(
             > 0
         ]
         scatter(stalks, spores)
+        if show_ebars:
+            spore_ref = (
+                np.array(
+                    [
+                        df.loc[snp, "spore_ref"]
+                        for df in all_fet_data.values()
+                        if df.loc[snp, "stalk_alt"] + df.loc[snp, "spore_alt"] > 0
+                    ]
+                )
+                + ebar_pseudocount
+            )
+            stalk_ref = (
+                np.array(
+                    [
+                        df.loc[snp, "stalk_ref"]
+                        for df in all_fet_data.values()
+                        if df.loc[snp, "stalk_alt"] + df.loc[snp, "spore_alt"] > 0
+                    ]
+                )
+                + ebar_pseudocount
+            )
+            spore_alt = (
+                np.array(
+                    [
+                        df.loc[snp, "spore_alt"]
+                        for df in all_fet_data.values()
+                        if df.loc[snp, "stalk_alt"] + df.loc[snp, "spore_alt"] > 0
+                    ]
+                )
+                + ebar_pseudocount
+            )
+            stalk_alt = (
+                np.array(
+                    [
+                        df.loc[snp, "stalk_alt"]
+                        for df in all_fet_data.values()
+                        if df.loc[snp, "stalk_alt"] + df.loc[snp, "spore_alt"] > 0
+                    ]
+                )
+                + ebar_pseudocount
+            )
+            spore_sum = spore_ref + spore_alt
+            stalk_sum = stalk_ref + stalk_alt
+            spore_e = sqrt(
+                spore_sum * (spore_ref / spore_sum) * (spore_alt / spore_sum)
+            )
+            stalk_e = sqrt(
+                stalk_sum * (stalk_ref / stalk_sum) * (stalk_alt / stalk_sum)
+            )
+            errorbar(stalks, spores, .5 * stalk_e, .5 * spore_e, fmt=".")
         plot([0, 1], [0, 1], "r:")
         ax.set_aspect(1)
         xlim(-0.1, 1.1)
@@ -281,8 +338,8 @@ def plot_top_snps(
         else:
             xticks([])
 
-    mpl.tight_layout()
-    mpl.savefig(path.join(outdir, "{}_snps.png".format(name)))
+    tight_layout()
+    savefig(path.join(outdir, "{}_snps.png".format(name)))
     close()
 
 
