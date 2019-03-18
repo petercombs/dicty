@@ -99,7 +99,7 @@ def make_qq_plot(
     xlabel("-log10 p Expected")
     ylabel("-log10 p Observed")
     legend(loc="lower right")
-    savefig(path.join(outdir, "combined_pvals_spore_and_stalk.png"))
+    savefig("{}combined_pvals_spore_and_stalk.png".format(outdir))
     close()
 
 
@@ -195,7 +195,7 @@ def make_manhattan_plot(
         yticks(ticks, np.abs(ticks))
 
     tight_layout()
-    savefig(path.join(outdir, fname), dpi=900)
+    savefig("{}{}".format(outdir, fname), dpi=900)
 
 
 def make_tehranchigram(
@@ -226,7 +226,7 @@ def make_tehranchigram(
     xlabel("Stalk Frequency")
     ylabel("Spore Frequency")
     colorbar()
-    savefig(path.join(outdir, fname))
+    savefig("{}{}".format(outdir, fname))
     close()
 
 
@@ -236,7 +236,7 @@ def plot_top_snps(
     num_snps,
     all_fet_data,
     num_snps_to_plot=16,
-    outdir="analysis/results",
+    outdir="analysis/results/",
     show_ebars=True,
     ebar_pseudocount=0.5,
 ):
@@ -339,7 +339,7 @@ def plot_top_snps(
             xticks([])
 
     tight_layout()
-    savefig(path.join(outdir, "{}_snps.png".format(name)))
+    savefig("{}{}_snps.png".format(outdir, name))
     close()
 
 
@@ -350,9 +350,9 @@ if __name__ == "__main__":
     pval_table = pval_table.loc[pval_table.num_snps > args.min_samples]
 
     outdir = (
-        args.output_prefix
+        args.output_prefix + "/"
         if path.isdir(args.output_prefix)
-        else path.dirname(args.output_prefix)
+        else args.output_prefix
     )
 
     translator = {}
@@ -398,7 +398,7 @@ if __name__ == "__main__":
         bins=np.arange(1, max(pval_table_orig.num_snps)),
     )
     hist(pval_table_orig.num_snps.loc[on_autosome], density=True, histtype="step")
-    savefig(path.join(outdir, "num_snps.png"))
+    savefig("{}num_snps.png".format(outdir))
     close()
 
     print("QQ Plot")
@@ -436,16 +436,3 @@ if __name__ == "__main__":
     print("SNPs that increase GC", sum(res == -1))
     print("SNPs that increase AT", sum(res == 1))
     print("SNPs that don't change AT/GC", sum(res == 0))
-
-#    for i_name, i_dataset in (
-#        ("spore", combined_pvals_spore),
-#        ("stalk", combined_pvals_stalk),
-#        ("random", combined_pvals_rand),
-#    ):
-#        plot_top_snps(
-#            i_dataset,
-#            i_name,
-#            any_good_snps,
-#            fet_data,
-#            num_snps_to_plot=args.num_subplots,
-#        )

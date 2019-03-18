@@ -138,6 +138,9 @@ startswith = lambda y: lambda x: x.startswith(y)
 if __name__ == "__main__":
     args = parse_args()
     outdir = path.dirname(args.output_prefix)
+    args.output_prefix = (
+        args.output_prefix + "/" if path.isdir(args.output_prefix) else output_prefix
+    )
 
     (
         pvals_to_combine_fwd,
@@ -254,26 +257,9 @@ if __name__ == "__main__":
     make_tehranchigram(
         {chrom: all_stalk_freqs[chrom] for chrom in all_autosomes},
         {chrom: all_spore_freqs[chrom] for chrom in all_autosomes},
-        outdir=outdir,
+        outdir=args.output_prefix,
         fname="autosome_prepost",
     )
-
-    """
-    make_manhattan_plot(
-        combined_pvals_fwd, combined_pvals_rev, outdir=outdir, autosomes=args.autosomes
-    )
-
-    make_manhattan_plot(
-        spore_ref_depth + spore_alt_depth,
-        stalk_ref_depth + stalk_alt_depth,
-        outdir=outdir,
-        label="log10 coverage",
-        fname="coverage",
-        plot_bonferroni=False,
-        autosomes=args.autosomes,
-        violin=True,
-    )
-    """
 
     for i_name, i_dataset in (
         ("spore", combined_pvals_fwd),
@@ -286,4 +272,5 @@ if __name__ == "__main__":
             any_good_snps,
             fet_data,
             num_snps_to_plot=args.num_subplots,
+            outdir=args.output_prefix,
         )
