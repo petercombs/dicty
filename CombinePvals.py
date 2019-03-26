@@ -139,7 +139,9 @@ if __name__ == "__main__":
     args = parse_args()
     outdir = path.dirname(args.output_prefix)
     args.output_prefix = (
-        args.output_prefix + "/" if path.isdir(args.output_prefix) else output_prefix
+        args.output_prefix + "/"
+        if path.isdir(args.output_prefix)
+        else args.output_prefix
     )
 
     (
@@ -155,6 +157,8 @@ if __name__ == "__main__":
         any_good_snps,
         fet_data,
     ) = load_data(args.scores)
+
+    pkl.dump(fet_data, open(args.output_prefix + ".fet_data.pkl", "wb"))
 
     if not args.skip_fisher:
         good_snps = any_good_snps.index[any_good_snps > 0]
@@ -257,7 +261,7 @@ if __name__ == "__main__":
     make_tehranchigram(
         {chrom: all_stalk_freqs[chrom] for chrom in all_autosomes},
         {chrom: all_spore_freqs[chrom] for chrom in all_autosomes},
-        outdir=args.output_prefix,
+        outdir=path.dirname(args.output_prefix) + "/",
         fname="autosome_prepost",
     )
 
@@ -267,10 +271,10 @@ if __name__ == "__main__":
         ("random", combined_pvals_rand),
     ):
         plot_top_snps(
-            i_dataset,
+            i_dataset.sort_values(),
             i_name,
             any_good_snps,
             fet_data,
             num_snps_to_plot=args.num_subplots,
-            outdir=args.output_prefix,
+            outdir=path.dirname(args.output_prefix) + "/",
         )
