@@ -52,6 +52,11 @@
                 "cpus": 4,
                 "memory": "30G"
         },
+        "score_snps":
+        {
+            "cpus": 4,
+            "memory": "5G"
+        },
         "fisher_pvalues":
         {
             "cpus": 4
