@@ -129,6 +129,7 @@ rule fisher_pvalues:
         'analysis/results/combined.Best.tsv',
         'analysis/results/spore_snps.png',
         'analysis/results/stalk_snps.png',
+        'analysis/results/combined.fet_data.pkl',
         #'analysis/results/manhattan.png',
     conda: "envs/dicty.yaml"
     shell: """
@@ -150,6 +151,7 @@ rule subset_fisher_pvalues:
         'analysis/{group}/combined.Spore.tsv',
         'analysis/{group}/combined.Random.tsv',
         'analysis/{group}/combined.Best.tsv',
+        'analysis/{group}/combined.fet_data.pkl',
     conda: "envs/dicty.yaml"
     shell: """
     export MPLBACKEND=Agg
