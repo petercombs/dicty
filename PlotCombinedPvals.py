@@ -317,10 +317,10 @@ def plot_top_snps(
             spore_sum = spore_ref + spore_alt
             stalk_sum = stalk_ref + stalk_alt
             spore_e = sqrt(
-                spore_sum * (spore_ref / spore_sum) * (spore_alt / spore_sum)
+                1 / spore_sum * (spore_ref / spore_sum) * (spore_alt / spore_sum)
             )
             stalk_e = sqrt(
-                stalk_sum * (stalk_ref / stalk_sum) * (stalk_alt / stalk_sum)
+                1 / stalk_sum * (stalk_ref / stalk_sum) * (stalk_alt / stalk_sum)
             )
             errorbar(stalks, spores, .5 * stalk_e, .5 * spore_e, fmt=".")
         plot([0, 1], [0, 1], "r:")
