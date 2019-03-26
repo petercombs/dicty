@@ -838,6 +838,7 @@ indexes:
     "7": GCTCGGCC
     "8": AGCTCAGT
     NEXTFLEX1: AGATCTCG
+    '???': '???'
 
 
 

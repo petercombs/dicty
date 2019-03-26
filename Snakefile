@@ -50,8 +50,8 @@ def getreads(readnum):
                                 sample=wildcards.sample,
                                 part=wildcards.part,
                                 readnum=readnum,
-                                i7Seq=config['indexes'][data['i7']],
-                                i5Seq=config['indexes'][data['i5']],
+                                i7Seq=config['indexes'][data.get('i7', '???')],
+                                i5Seq=config['indexes'][data.get('i5', '???')],
                                 **data,
                 ))
                     #print(globstr)
