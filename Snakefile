@@ -831,6 +831,27 @@ rule map_gdna:
             --output-fmt bam -o {output} -
         """
 
+rule read_counts:
+    input:
+        getreads(1),
+        getreads(2),
+    output:
+        "{analysis_dir}/{sample}/{part}/read_count.txt"
+    shell: "zcat {input} | wc -l > {output}"
+
+rule autosome_reads:
+    input:
+        bam="{sample}/mapped.bam",
+        bai="{sample}/mapped.bam.bai",
+    output:
+        "{sample}/autosome_read_count.txt"
+    shell: """
+    samtools idxstats {input.bam} \
+        | awk '$1 ~ /DDB02324[23]/ {{sum += 3}}; END {{print sum}}' \
+        > {output}
+
+    """
+
 rule star_genome_generate:
     input:
         fasta="{file}.fasta",
