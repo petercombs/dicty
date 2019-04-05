@@ -556,6 +556,12 @@ rule all_reads:
     samtools merge -l 9 {output} {input}
     """
 
+rule all_read_counts:
+    input:
+        bam=expand("analysis/{sample}/{part}/{file}.txt",
+                    sample=config['activesamples'], 
+                    part=['Stalk', 'Spore'],
+                    file=['autosome_read_count', 'read_count']),
 
 rule all_reads_by_group:
     input:
@@ -847,7 +853,7 @@ rule autosome_reads:
         "{sample}/autosome_read_count.txt"
     shell: """
     samtools idxstats {input.bam} \
-        | awk '$1 ~ /DDB02324[23]/ {{sum += 3}}; END {{print sum}}' \
+        | awk '$1 ~ /DDB02324[23]/ {{sum += $3}}; END {{print sum}}' \
         > {output}
 
     """
