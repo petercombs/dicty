@@ -330,7 +330,7 @@ rule plot_closest_mutants:
 rule plot_gc_bias:
     input:
         bedfiles = expand("analysis/combined/{subset}.1kb.bed",
-                subset=['neil','round1', 'round2', 'baym_standard', 'baym_cool', 'baym_tmac', 'baym_cool_tmac', 'nextflex']
+                subset=['baym_cool_tmac', 'nextflex', 'nextflex_tmac']
                     ),
         gc_file = "Reference/dicty.1kb.gc.tsv"
     output:
