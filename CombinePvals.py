@@ -123,6 +123,99 @@ def load_data(filenames):
     )
 
 
+def load_data_single(fname):
+    fet_file_orig = pd.read_csv(fname, sep="\t", squeeze=True, index_col=0)
+
+    good_snps = isfinite(fet_file_orig["rank"]) & (fet_file_orig["rank"] >= 0)
+    fet_file = fet_file_orig.loc[good_snps]
+
+    semi_ps = fet_file["rank"] / fet_file.maxrank
+
+    # Shuffling a Series is apparently wicked slow
+    semi_ps_rand_to_shuffle = np.array(semi_ps[good_snps])
+    shuffle(semi_ps_rand_to_shuffle)
+    semi_ps_rand = pd.Series(index=semi_ps.index, data=np.nan)
+    semi_ps_rand[good_snps] = semi_ps_rand_to_shuffle
+
+    return dict(
+        fet=fet_file_orig.sort_index(),
+        good_snps=good_snps,
+        semi_ps=semi_ps,
+        rand_ps=semi_ps_rand,
+        max_rank=fet_file["rank"].max(),
+    )
+
+
+def load_data_multi(files):
+
+    fet_data = {}
+    all_stalk_freqs = defaultdict(list)
+    all_spore_freqs = defaultdict(list)
+    stalk_ref_depth = None
+    spore_ref_depth = None
+    stalk_alt_depth = None
+    spore_alt_depth = None
+    any_good_snps = None
+    pvals_to_combine_fwd = defaultdict(list)
+    pvals_to_combine_rev = defaultdict(list)
+    pvals_to_combine_rand = defaultdict(list)
+
+    print("Dispatching files for reading")
+    p = Pool()
+    jobs = {fname: p.apply_async(load_data_single, (fname,)) for fname in tqdm(files)}
+
+    print("Collecting read files")
+    for ix in tqdm(jobs):
+        res = jobs[ix].get()
+        fet_file = res["fet"]
+        fet_data[ix] = fet_file
+        semi_ps = res["semi_ps"]
+        semi_ps_rand = res["rand_ps"]
+        max_rank = res["max_rank"]
+        good_snps = res["good_snps"]
+
+        if stalk_ref_depth is None:
+            stalk_ref_depth = fet_file.stalk_ref
+            spore_ref_depth = fet_file.spore_ref
+            stalk_alt_depth = fet_file.stalk_alt
+            spore_alt_depth = fet_file.spore_alt
+            any_good_snps = good_snps
+        else:
+            stalk_ref_depth += fet_file.stalk_ref
+            spore_ref_depth += fet_file.spore_ref
+            stalk_alt_depth += fet_file.stalk_alt
+            spore_alt_depth += fet_file.spore_alt
+            any_good_snps += good_snps
+
+        for ix in semi_ps.index:
+            pvals_to_combine_fwd[ix].append(semi_ps[ix])
+            pvals_to_combine_rev[ix].append(1 - semi_ps[ix] + 1 / max_rank)
+            pvals_to_combine_rand[ix].append(semi_ps_rand[ix])
+
+        great_snps = (fet_file.iloc[:, 1:3].T.sum() > 10) & (
+            fet_file.iloc[:, 3:5].T.sum() > 10
+        )
+
+        for ix in fet_file.loc[great_snps].index:
+            chr = ix.split(":")[0]
+            all_stalk_freqs[chr].append(fet_file.loc[ix, "stalk_ratio"])
+            all_spore_freqs[chr].append(fet_file.loc[ix, "spore_ratio"])
+
+    return (
+        pvals_to_combine_fwd,
+        pvals_to_combine_rev,
+        pvals_to_combine_rand,
+        all_stalk_freqs,
+        all_spore_freqs,
+        pd.Series(stalk_ref_depth),
+        pd.Series(spore_ref_depth),
+        pd.Series(stalk_alt_depth),
+        pd.Series(spore_alt_depth),
+        any_good_snps,
+        fet_data,
+    )
+
+
 def combine_all_pvals(table, indices):
     out = pd.Series(index=table.keys(), data=nan, dtype=float)
 
