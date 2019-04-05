@@ -802,8 +802,8 @@ rule map_gdna:
         unpack(getreads(1)),
         unpack(getreads(2)),
         ancient(path.join(analysis_dir, "{sample}", "{part}", "exists")),
-        bt2_index="Reference/combined_dd_ec.1.bt2",
-        fasta="Reference/combined_dd_ec.fasta",
+        bt2_index="Reference/reference.1.bt2",
+        fasta="Reference/reference.fasta",
     output:
         path.join(analysis_dir, "{sample}", "{part}", "mapped.bam")
     benchmark:
