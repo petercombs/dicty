@@ -556,10 +556,56 @@ rule all_reads:
     samtools merge -l 9 {output} {input}
     """
 
+rule jellyfish_count:
+    input: "{file}.jf"
+    output: "{file}.jf.tsv"
+    shell: """
+    module load jellyfish
+    jellyfish dump -tc {input} | sort -k2nr --parallel 10 > {output}
+    """
+
+
+rule mapped_reads_kmers:
+    input:
+        bam="{sample}.bam"
+    output:
+        "{sample}.jf"
+    shell: """
+    module load jellyfish
+    mkfifo {wildcards.sample}.pipe
+    #samtools view {input} \
+        #| awk '{{printf(">%s\\n%s\\n", $1, $10)}}' \
+        #> {wildcards.sample}.pipe &
+    jellyfish count <(samtools view -F 4 {input} | awk '{{printf(">%s\\n%s\\n", $1, $10)}}') -o {output} -m 16 -s 1000M -t 10 -C
+    rm {wildcards.sample}.pipe
+    """
+
+
+rule unmapped_reads_kmers:
+    input: 
+        unpack(getreads(1)),
+        unpack(getreads(2)),
+    output:
+        "analysis/{sample}/{part}/unmapped.jf"
+    shell:"""
+    module load jellyfish
+    mkfifo analysis/{wildcards.sample}/{wildcards.part}/pipe 
+    #zcat {input} > analysis/{wildcards.sample}/{wildcards.part}/pipe &
+    jellyfish count <(zcat {input}) -m 16 -o {output} -s 1000M -t 10 -C
+    rm analysis/{wildcards.sample}/{wildcards.part}/pipe
+    """
+
+rule all_kmer_counts:
+    input:
+        bam=expand("analysis/{sample}/{part}/{file}.jf",
+                    sample=config['activesamples']+config['inactivesamples'], 
+                    part=['Stalk', 'Spore'],
+                    file=['unmapped', 'mapped_dedup']),
+
 rule all_read_counts:
     input:
         bam=expand("analysis/{sample}/{part}/{file}.txt",
-                    sample=config['activesamples'], 
+                    sample=config['activesamples']+config['inactivesamples'], 
                     part=['Stalk', 'Spore'],
                     file=['autosome_read_count', 'read_count']),
 

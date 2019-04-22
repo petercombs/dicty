@@ -62,6 +62,12 @@
             "cpus": 4
 
         },
+        "unmapped_reads_kmers":{
+            "cpus": 10
+        },
+        "mapped_reads_kmers":{
+            "cpus": 10
+        },
         "blast_contamination":
         {
             "cpus": 20,
