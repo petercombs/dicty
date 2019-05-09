@@ -440,14 +440,14 @@ rule sort_bam:
     input: "{sample}.bam"
     output: "{sample}.sorted.bam"
     shell: """  module load samtools
-    samtools sort -o {output} {input}
+    samtools sort -o {output} -T {wildcards.sample}_SORTTMP {input}
     """
 
 rule namesort_bam:
     input: "{sample}.bam"
     output: "{sample}.namesort.bam"
     shell: """  module load samtools
-    samtools sort -n -o {output} {input}
+    samtools sort -n -o {output} -T {wildcards.sample}_NAMESORTTMP {input}
     """
 
 rule insert_size_metrics:
@@ -541,9 +541,9 @@ rule mono_mappers:
     output: "{sample}_monomap.bam"
     conda: "envs/dicty.yaml"
     shell: """ module load samtools
-    samtools sort -n {input.bam} \
+    samtools sort -n {input.bam} -T {wildcards.sample}_monomap_TMP \
     | python FilterToMonomappers.py - - \
-    | samtools sort -o {output} -
+    | samtools sort -o {output} -T {wildcards.sample}_monomap_merge_TMP -
     """
 
 rule all_reads:
