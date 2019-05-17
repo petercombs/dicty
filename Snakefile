@@ -103,8 +103,8 @@ rule score_snps:
 
 rule snp_counts:
     input:
-        bam="{sample}/mapped_hq_dedup_monomap.bam",
-        bai="{sample}/mapped_hq_dedup_monomap.bam.bai",
+        bam="{sample}/mapped_dedup_monomap.bam",
+        bai="{sample}/mapped_dedup_monomap.bam.bai",
         variants="analysis/combined/all.snps.bed",
         code="CountSNPASE.py",
     output:
@@ -548,7 +548,7 @@ rule mono_mappers:
 
 rule all_reads:
     input:
-        bam=expand("analysis/{sample}/{part}/mapped_hq_dedup.bam",
+        bam=expand("analysis/{sample}/{part}/mapped_dedup.bam",
                     sample=config['activesamples'], part=['Stalk', 'Spore']),
     output:
         "analysis/combined/all_reads.bam"
@@ -612,7 +612,7 @@ rule all_read_counts:
 rule all_reads_by_group:
     input:
         dir="analysis/combined/{group}/exists",
-        bam=lambda wildcards: expand("analysis/{sample}/{part}/mapped_hq_dedup.bam",
+        bam=lambda wildcards: expand("analysis/{sample}/{part}/mapped_dedup.bam",
                     sample=config[wildcards.group], part=['Stalk', 'Spore']),
     output:
         "analysis/combined/{group}/all_reads.bam"
@@ -685,9 +685,9 @@ rule bcf_call_variants:
         ref_dict="Reference/combined_dd_ec.dict",
         regions="Reference/reference.regions",
         dir=ancient('analysis/combined/exists'),
-        bam=expand("analysis/{sample}/{part}/mapped_hq_dedup.bam",
+        bam=expand("analysis/{sample}/{part}/mapped_dedup.bam",
                     sample=config['activesamples'], part=['Stalk', 'Spore']),
-        bai=expand("analysis/{sample}/{part}/mapped_hq_dedup.bam.bai",
+        bai=expand("analysis/{sample}/{part}/mapped_dedup.bam.bai",
                     sample=config['activesamples'], part=['Stalk', 'Spore']),
     output:
         "analysis/combined/all.vcf.gz",
@@ -1035,14 +1035,14 @@ rule all_middle_seqs:
 
 rule all_coverage_bigwigs:
     input:
-        expand("analysis/{sample}/{part}/mapped_hq_dedup.cov.bw",
+        expand("analysis/{sample}/{part}/mapped_dedup.cov.bw",
                 sample=config['activesamples'], part=['Stalk', 'Spore'])
     output:
         touch("analysis/sentinels/all_coverage_bigwigs")
 
 rule all_reads_in_group:
     input:
-        lambda wildcards: expand("analysis/{sample}/{part}/mapped_hq_dedup.bam",
+        lambda wildcards: expand("analysis/{sample}/{part}/mapped_dedup.bam",
                 sample=config[wildcards.group],
                 part=['Stalk', 'Spore'],
                 )
@@ -1097,7 +1097,7 @@ rule coverage_bedgraph:
 
 rule all_coverage_bedgraphs:
     input:
-        expand("analysis/{sample}/{part}/mapped_hq_dedup.cov.bed",
+        expand("analysis/{sample}/{part}/mapped_dedup.cov.bed",
                 sample=config['activesamples'], part=['Stalk', 'Spore'])
     output:
         touch("analysis/sentinels/all_coverage_bedgraphs")
@@ -1105,7 +1105,7 @@ rule all_coverage_bedgraphs:
 rule anycoverage_peaks:
     input:
         exists="analysis/results/macs2/exists",
-        beds=expand("analysis/{sample}/{part}/mapped_hq_dedup.anycov.bed",
+        beds=expand("analysis/{sample}/{part}/mapped_dedup.anycov.bed",
                 sample=config['activesamples'], part=['Stalk', 'Spore']),
     output:
         peaks="analysis/results/macs2/NA_peaks.narrowPeak",
