@@ -66,7 +66,7 @@ def load_data(filenames):
 
     print("Processing input files")
     for file in tqdm(filenames):
-        fet_file = pd.read_table(file, squeeze=True, index_col=0)
+        fet_file = pd.read_csv(file, squeeze=True, index_col=0, sep="\t")
         if stalk_ref_depth is None:
             stalk_ref_depth = fet_file.stalk_ref
             spore_ref_depth = fet_file.spore_ref
@@ -281,10 +281,18 @@ if __name__ == "__main__":
         )
         combined_pvals_rand.sort_values(inplace=True)
 
-        combined_pvals_fwd.to_csv(args.output_prefix + ".Spore.tsv", sep="\t")
-        combined_pvals_rev.to_csv(args.output_prefix + ".Stalk.tsv", sep="\t")
-        combined_pvals_rand.to_csv(args.output_prefix + ".Random.tsv", sep="\t")
-        combined_pvals_nondir.to_csv(args.output_prefix + ".Best.tsv", sep="\t")
+        combined_pvals_fwd.to_csv(
+            args.output_prefix + ".Spore.tsv", sep="\t", header=False
+        )
+        combined_pvals_rev.to_csv(
+            args.output_prefix + ".Stalk.tsv", sep="\t", header=False
+        )
+        combined_pvals_rand.to_csv(
+            args.output_prefix + ".Random.tsv", sep="\t", header=False
+        )
+        combined_pvals_nondir.to_csv(
+            args.output_prefix + ".Best.tsv", sep="\t", header=False
+        )
 
     out_table = pd.DataFrame(
         {
@@ -300,7 +308,7 @@ if __name__ == "__main__":
     )
 
     out_table.sort_values(by="num_snps", inplace=True)
-    out_table.to_csv(args.output_prefix + ".all.tsv", sep="\t")
+    out_table.to_csv(args.output_prefix + ".all.tsv", sep="\t", header=True)
 
     all_good_snps = any_good_snps.index[any_good_snps == len(args.scores)]
     good_snps_stalk = pd.DataFrame(
