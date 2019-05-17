@@ -93,7 +93,8 @@ def load_data(filenames):
             all_stalk_freqs[chr].append(fet_file.loc[ix, "stalk_ratio"])
             all_spore_freqs[chr].append(fet_file.loc[ix, "spore_ratio"])
 
-        semi_ps = fet_file["rank"] / fet_file.maxrank
+        maxrank = fet_file["rank"].max()
+        semi_ps = fet_file["rank"] / maxrank
 
         # Shuffling a Series is apparently wicked slow
         semi_ps_rand_to_shuffle = np.array(semi_ps[good_snps])
@@ -129,7 +130,8 @@ def load_data_single(fname):
     good_snps = isfinite(fet_file_orig["rank"]) & (fet_file_orig["rank"] >= 0)
     fet_file = fet_file_orig.loc[good_snps]
 
-    semi_ps = fet_file["rank"] / fet_file.maxrank
+    maxrank = fet_file["rank"].max()
+    semi_ps = fet_file["rank"] / maxrank
 
     # Shuffling a Series is apparently wicked slow
     semi_ps_rand_to_shuffle = np.array(semi_ps[good_snps])

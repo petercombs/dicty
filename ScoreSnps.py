@@ -57,7 +57,8 @@ if __name__ == "__main__":
     out_spore_alt = {}
     out_refbase = {}
     out_altbase = {}
-    pool = Pool()
+    pool = Pool(8)
+    print("Starting Fisher Exact Tests", file=stderr)
     for pos in tqdm(in_both):
         table = [
             [args.stalk_count[pos][0], args.stalk_count[pos][1]],
@@ -72,6 +73,7 @@ if __name__ == "__main__":
         out_spore_ref[snpid] = args.spore_count[pos][0]
         out_spore_alt[snpid] = args.spore_count[pos][1]
 
+    print("Getting Fisher Exact Pvalues", file=stderr)
     for id in tqdm(out_pvals):
         odds_r, pval = out_pvals[id].get()
         if odds_r > 1:
@@ -91,19 +93,16 @@ if __name__ == "__main__":
     out["spore_ratio"] = out.spore_alt / (out.spore_alt + out.spore_ref)
 
     out.index.name = "snp_id"
+    print("Updating ranks", file=stderr)
     out = out.sort_values(by="pval")
     out["rank"] = -1
     i = 0
-    print("Updating ranks")
-    for ix, row in tqdm(out.iterrows(), total=len(out.index)):
-        if (
-            (row.stalk_alt + row.spore_alt > 0)
-            and (row.stalk_ref + row.spore_ref > 0)
-            and (row.stalk_ref + row.stalk_alt > 0)
-            and (row.spore_ref + row.spore_alt > 0)
-        ):
-            i += 1
-            out.ix[ix, "rank"] = i
+    min_vals = out.loc[:, ["stalk_alt", "stalk_ref", "spore_alt", "spore_ref"]].min(
+        axis=1
+    )
+    min_vals_pass = min_vals.index[min_vals >= 2]
+    out.loc[min_vals_pass, "rank"] = 1 + pd.np.arange(len(min_vals_pass))
 
-    out["maxrank"] = i
+    out["maxrank"] = 1 + len(min_vals_pass)
+    print("Writing Output File", file=stderr)
     out.to_csv(args.output, sep="\t", float_format="%5e")
