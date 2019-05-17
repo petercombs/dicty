@@ -1068,8 +1068,8 @@ rule coverage_in_windows:
         sample="^(?!Reference).*"
     shell: """
     module load bedtools bioawk
-    bedtools coverage -a {input.bed} -b {input.bam} \
-    | bioawk -t '{{print $1,$2,$3,$4/$6}}' \
+    bedtools coverage -sorted -a {input.bed} -b {input.bam} \
+    | bioawk -t '{{print $1,$2,$3,$4/($6+1e-6)}}' \
     > {output}
     """
 
