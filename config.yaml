@@ -1142,7 +1142,7 @@ samples:
         AdmeraID: 18146FL-11-01-09V1
         Lane: "*"
     GP3-NF35-Stalk:
-        AdmeraID: 18146FL-11-01-09V1
+        AdmeraID: 18146FL-11-01-10V1
         Lane: "*"
 
 activesamples: [
