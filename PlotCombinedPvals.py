@@ -162,7 +162,7 @@ def make_manhattan_plot(
     )
     if plot_bonferroni:
         hlines(
-            [log10(.05 / len(x)), -log10(.05 / len(x))],
+            [log10(.05 / (len(x) + 1e-6)), -log10(.05 / (len(x) + 1e-6))],
             0,
             len(x),
             "k",
