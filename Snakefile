@@ -869,11 +869,11 @@ rule map_gdna:
         r1s=getreadscomma(1),
         r2s=getreadscomma(2),
         outdir= lambda wildcards, output: path.dirname(output[0])
-    threads: 6
+    threads: 40
     shell: """ module load samtools/1.3 bowtie2
     bowtie2 \
 		--very-sensitive-local \
-		-p 11 \
+		-p 50 \
 		--rg-id {wildcards.sample} \
 		--rg "SM:{wildcards.sample}" \
 		--rg "PL:illumina" \

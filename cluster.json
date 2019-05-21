@@ -30,7 +30,7 @@
         "map_gdna":
         {
                 "time": "1-00:00:00",
-                "cpus": 8,
+                "cpus": 50,
                 "memory": "15G"
 
         },
