@@ -87,9 +87,13 @@ if __name__ == "__main__":
         total_len = pd.Series(index=gc_steps, data=np.nan)
 
         for bin_lo, bin_hi in zip(gc_cov.index, gc_cov.index[1:]):
-            q = gc.query("{} <= frac_gc < {}".format(bin_lo, bin_hi))
-            gc_cov[bin_lo] = sum(cov.ix[q.index, "cov"])
-            total_len[bin_lo] = sum(q["seq_len"])
+            try:
+                q = gc.query("{} <= frac_gc < {}".format(bin_lo, bin_hi))
+                gc_cov[bin_lo] = sum(cov.loc[q.index, "cov"])
+                total_len[bin_lo] = sum(q["seq_len"])
+            except KeyError:
+                gc_cov[bin_lo] = 0
+                total_len[bin_lo] = sum(q["seq_len"])
 
         y = gc_cov / total_len
 
