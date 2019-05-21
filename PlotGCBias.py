@@ -66,7 +66,9 @@ def step_ceil(value, stepsize):
 
 if __name__ == "__main__":
     args = parse_args()
-    gc = pd.read_table(args.gc_file, index_col=[0, 1, 2], names=GC_COLS, header=0)
+    gc = pd.read_csv(
+        args.gc_file, index_col=[0, 1, 2], names=GC_COLS, header=0, sep="\t"
+    )
     gc_low = step_floor(gc.frac_gc.min(), args.step_size / 100)
     gc_high = step_ceil(gc.frac_gc.max(), args.step_size / 100)
     gc_steps = np.arange(gc_low, gc_high, args.step_size / 100)
@@ -77,7 +79,9 @@ if __name__ == "__main__":
 
     outdir = args.output_dir
     for cov_file in args.window_coverage_bed:
-        cov = pd.read_table(cov_file, header=None, names=COV_COLS, index_col=[0, 1, 2])
+        cov = pd.read_csv(
+            cov_file, header=None, names=COV_COLS, index_col=[0, 1, 2], sep="\t"
+        )
         # total_cov = sum(gc["seq_len"] * cov["cov"])
         gc_cov = pd.Series(index=gc_steps, data=np.nan)
         total_len = pd.Series(index=gc_steps, data=np.nan)
