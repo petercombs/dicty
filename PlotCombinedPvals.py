@@ -230,6 +230,15 @@ def make_tehranchigram(
     close()
 
 
+def all_counts_nonzero(row):
+    return (
+        (row["stalk_alt"] > 0)
+        and (row["stalk_ref"] > 0)
+        and (row["spore_alt"] > 0)
+        and (row["spore_ref"] > 0)
+    )
+
+
 def plot_top_snps(
     dataset,
     name,
@@ -239,6 +248,7 @@ def plot_top_snps(
     outdir="analysis/results/",
     show_ebars=True,
     ebar_pseudocount=0.5,
+    include_cond=all_counts_nonzero,
 ):
     """Plot stalk/spore frequencies of top SNPs
 
@@ -257,20 +267,12 @@ def plot_top_snps(
         stalks = [
             all_fet_data[file].loc[snp, "stalk_ratio"]
             for file in all_fet_data
-            if (
-                all_fet_data[file].loc[snp, "stalk_alt"]
-                + all_fet_data[file].loc[snp, "spore_alt"]
-            )
-            > 0
+            if include_cond(all_fet_data[file].loc[snp])
         ]
         spores = [
             all_fet_data[file].loc[snp, "spore_ratio"]
             for file in all_fet_data
-            if (
-                all_fet_data[file].loc[snp, "stalk_alt"]
-                + all_fet_data[file].loc[snp, "spore_alt"]
-            )
-            > 0
+            if include_cond(all_fet_data[file].loc[snp])
         ]
         scatter(stalks, spores)
         if show_ebars:
