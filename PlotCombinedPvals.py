@@ -125,8 +125,8 @@ def make_manhattan_plot(
     if autosomes:
         print("Before: ", len(spore_pvals))
         on_autosome = [x in autosomes or translator[x] in autosomes for x in chrom_of]
-        spore_pvals = spore_pvals.ix[on_autosome]
-        stalk_pvals = stalk_pvals.ix[on_autosome]
+        spore_pvals = spore_pvals.loc[on_autosome]
+        stalk_pvals = stalk_pvals.loc[on_autosome]
         chrom_of = chrom_of[on_autosome]
         print("After: ", len(spore_pvals))
     chroms = sorted(set(chrom_of))
