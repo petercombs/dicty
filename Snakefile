@@ -639,7 +639,7 @@ rule all_blast:
 
 rule all_kraken:
     input:
-        expand("analysis/{sample}/{part}/kraken_out.txt",
+        expand("analysis/{sample}/{part}/kraken_report.txt",
                     sample=config['activesamples']+config['inactivesamples'], part=['Stalk', 'Spore']),
 
 rule sentinel_hq:
@@ -1239,13 +1239,12 @@ rule kraken_contamination:
         r2=getreads(2)
     output:
         report="analysis/{sample}/{part}/kraken_report.txt",
-        outfile="analysis/{sample}/{part}/kraken_out.txt",
     shell: """
     kraken2 --db /godot/shared_data/kraken2 \
         --use-names  \
         --report {output.report}\
         {input.r1} {input.r2} \
-        > {output.outfile}
+        > /dev/null
     """
 
 rule blast_contamination:
