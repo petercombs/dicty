@@ -72,5 +72,9 @@
         {
             "cpus": 20,
             "time": "4:00:00"
+        },
+        "kraken_contamination":
+        {
+            "memory": "50G"
         }
 }

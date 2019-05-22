@@ -637,6 +637,11 @@ rule all_blast:
         expand("analysis/{sample}/{part}/blastout.tsv",
                     sample=config['activesamples']+config['inactivesamples'], part=['Stalk', 'Spore']),
 
+rule all_kraken:
+    input:
+        expand("analysis/{sample}/{part}/kraken_out.txt",
+                    sample=config['activesamples']+config['inactivesamples'], part=['Stalk', 'Spore']),
+
 rule sentinel_hq:
     output: touch("analysis/sentinels/high_quality")
 
@@ -1228,6 +1233,20 @@ rule rand_seqs_simple:
 
 ruleorder: rand_seqs > rand_seqs_simple
 
+rule kraken_contamination:
+    input: 
+        r1=getreads(1),
+        r2=getreads(2)
+    output:
+        report="analysis/{sample}/{part}/kraken_report.txt",
+        outfile="analysis/{sample}/{part}/kraken_out.txt",
+    shell: """
+    kraken2 --db /godot/shared_data/kraken2 \
+        --use-names  \
+        --report {output.report}\
+        {input.r1} {input.r2} \
+        > {output.outfile}
+    """
 
 rule blast_contamination:
     input:
