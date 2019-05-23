@@ -281,7 +281,7 @@ def plot_top_snps(
                     [
                         df.loc[snp, "spore_ref"]
                         for df in all_fet_data.values()
-                        if df.loc[snp, "stalk_alt"] + df.loc[snp, "spore_alt"] > 0
+                        if include_cond(df.loc[snp])
                     ]
                 )
                 + ebar_pseudocount
@@ -291,7 +291,7 @@ def plot_top_snps(
                     [
                         df.loc[snp, "stalk_ref"]
                         for df in all_fet_data.values()
-                        if df.loc[snp, "stalk_alt"] + df.loc[snp, "spore_alt"] > 0
+                        if include_cond(df.loc[snp])
                     ]
                 )
                 + ebar_pseudocount
@@ -301,7 +301,7 @@ def plot_top_snps(
                     [
                         df.loc[snp, "spore_alt"]
                         for df in all_fet_data.values()
-                        if df.loc[snp, "stalk_alt"] + df.loc[snp, "spore_alt"] > 0
+                        if include_cond(df.loc[snp])
                     ]
                 )
                 + ebar_pseudocount
@@ -311,7 +311,7 @@ def plot_top_snps(
                     [
                         df.loc[snp, "stalk_alt"]
                         for df in all_fet_data.values()
-                        if df.loc[snp, "stalk_alt"] + df.loc[snp, "spore_alt"] > 0
+                        if include_cond(df.loc[snp])
                     ]
                 )
                 + ebar_pseudocount
