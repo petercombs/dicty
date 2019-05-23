@@ -64,9 +64,17 @@ def load_data(filenames):
     stalk_alt_depth = None
     spore_alt_depth = None
 
+    common_index = None
+
     print("Processing input files")
     for file in tqdm(filenames):
-        fet_file = pd.read_csv(file, squeeze=True, index_col=0, sep="\t")
+        fet_file = pd.read_csv(file, index_col=0, sep="\t", engine="c")
+        if common_index is None:
+            fet_file = fet_file.sort_index()
+            common_index = fet_file.index
+        else:
+            fet_file = fet_file.loc[common_index]
+        fet_data[file] = fet_file
         if stalk_ref_depth is None:
             stalk_ref_depth = fet_file.stalk_ref
             spore_ref_depth = fet_file.spore_ref
@@ -78,7 +86,6 @@ def load_data(filenames):
             stalk_alt_depth += fet_file.stalk_alt
             spore_alt_depth += fet_file.spore_alt
 
-        fet_data[file] = fet_file.sort_index()
         good_snps = isfinite(fet_file["rank"]) & (fet_file["rank"] >= 0)
         fet_file = fet_file.loc[good_snps]
         great_snps = (fet_file.iloc[:, 1:3].T.sum() > 10) & (
@@ -104,9 +111,7 @@ def load_data(filenames):
 
         for ix in semi_ps.index:
             pvals_to_combine_fwd[ix].append(semi_ps[ix])
-            pvals_to_combine_rev[ix].append(
-                1 - semi_ps[ix] + 1 / fet_file["rank"].max()
-            )
+            pvals_to_combine_rev[ix].append(1 - semi_ps[ix] + 1 / maxrank)
             pvals_to_combine_rand[ix].append(semi_ps_rand[ix])
 
     return (
@@ -126,6 +131,7 @@ def load_data(filenames):
 
 def load_data_single(fname):
     fet_file_orig = pd.read_csv(fname, sep="\t", squeeze=True, index_col=0)
+    fet_file_orig = fet_file_orig.sort_index()
 
     good_snps = isfinite(fet_file_orig["rank"]) & (fet_file_orig["rank"] >= 0)
     fet_file = fet_file_orig.loc[good_snps]
