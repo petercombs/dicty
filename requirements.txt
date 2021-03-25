@@ -42,7 +42,7 @@ multiqc==1.0
 pbr==3.1.1
 python-utils==2.2.0
 pyvcf==0.6.8
-pyyaml==3.13
+pyyaml==5.4
 ratelimiter==1.2.0.post0
 requests==2.19.1
 requests-cache==0.4.13
