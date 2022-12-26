@@ -15,7 +15,7 @@ scipy==1.1.0
 setuptools==40.2.0
 six==1.11.0
 tornado==5.1
-wheel==0.31.1
+wheel==0.38.1
 appdirs==1.4.3
 atropos==1.1.16
 attrs==18.1.0
